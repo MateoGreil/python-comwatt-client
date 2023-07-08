@@ -64,7 +64,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving authenticated user: {response.sttaus_code}')
+            raise Exception(f'Error retrieving authenticated user: {response.status_code}')
 
     def get_sites(self):
         """
@@ -87,14 +87,14 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving sites: {response.sttaus_code}')
+            raise Exception(f'Error retrieving sites: {response.status_code}')
 
 
     def get_site_networks_ts_time_ago(self, site_id,
-            measure_kind = "VIRTUAL_QUANTITY",
-            aggregation_level = "HOUR",
-            aggregation_type = "SUM",
-            time_ago_unit = "DAY",
+            measure_kind = "FLOW",
+            aggregation_level = "NONE",
+            aggregation_type = None,
+            time_ago_unit = "HOUR",
             time_ago_value = 1):
         """
         Retrieves the time series data for the networks of a specific site, based on the provided parameters.
@@ -103,7 +103,7 @@ class ComwattClient:
             site_id (str): The ID of the site.
             measure_kind (str): The kind of measure (default: "VIRTUAL_QUANTITY").
             aggregation_level (str): The aggregation level (default: "HOUR").
-            aggregation_type (str): The aggregation type (default: "SUM").
+            aggregation_type (str): The aggregation type (default: None, can be : None, "SUM", "MAX").
             time_ago_unit (str): The unit of time ago (default: "DAY").
             time_ago_value (int): The value of time ago (default: 1).
 
@@ -119,9 +119,11 @@ class ComwattClient:
                f'siteId={site_id}&'
                f'measureKind={measure_kind}&'
                f'aggregationLevel={aggregation_level}&'
-               f'aggregationType={aggregation_type}&'
                f'timeAgoUnit={time_ago_unit}&'
                f'timeAgoValue={time_ago_value}')
+
+        if aggregation_type != None:
+            url += f'&aggregationType={aggregation_type}'
 
         response = self.session.get(url)
         if response.status_code == 200:
@@ -183,7 +185,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving sites: {response.sttaus_code}')
+            raise Exception(f'Error retrieving sites: {response.status_code}')
 
     def get_device_ts_time_ago(self, device_id,
             measure_kind = "FLOW",
