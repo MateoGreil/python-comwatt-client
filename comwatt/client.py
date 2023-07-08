@@ -6,6 +6,8 @@ class ComwattClient:
         self.base_url = 'https://energy.comwatt.com/api'
         self.session = requests.Session()
 
+    # Password should be encrypted password, I don't know exactly what the encryption is for the moment,
+    # so you will need to encrypt it from their webapp
     def authenticate(self, username, password):
         url = f'{self.base_url}/v1/authent'
         headers = {
