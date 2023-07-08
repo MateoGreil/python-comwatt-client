@@ -89,6 +89,79 @@ class ComwattClient:
         else:
             raise Exception(f'Error retrieving sites: {response.sttaus_code}')
 
+
+    def get_site_networks_ts_time_ago(self, site_id,
+            measure_kind = "VIRTUAL_QUANTITY",
+            aggregation_level = "HOUR",
+            aggregation_type = "SUM",
+            time_ago_unit = "DAY",
+            time_ago_value = 1):
+        """
+        Retrieves the time series data for the networks of a specific site, based on the provided parameters.
+
+        Args:
+            site_id (str): The ID of the site.
+            measure_kind (str): The kind of measure (default: "VIRTUAL_QUANTITY").
+            aggregation_level (str): The aggregation level (default: "HOUR").
+            aggregation_type (str): The aggregation type (default: "SUM").
+            time_ago_unit (str): The unit of time ago (default: "DAY").
+            time_ago_value (int): The value of time ago (default: 1).
+
+        Returns:
+            dict: The time series data.
+
+        Raises:
+            Exception: If an error occurs while retrieving the data.
+
+        """
+
+        url = (f'{self.base_url}/aggregations/site-networks-ts-time-ago?'
+               f'siteId={site_id}&'
+               f'measureKind={measure_kind}&'
+               f'aggregationLevel={aggregation_level}&'
+               f'aggregationType={aggregation_type}&'
+               f'timeAgoUnit={time_ago_unit}&'
+               f'timeAgoValue={time_ago_value}')
+
+        response = self.session.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving aggregations: {response.status_code}')
+
+    def get_site_consumption_breakdown_time_ago(self, site_id,
+            aggregation_level = "HOUR",
+            time_ago_unit = "DAY",
+            time_ago_value = 1):
+        """
+        Retrieves the consumption breakdown data for a specific site, based on the provided parameters.
+
+        Args:
+            site_id (str): The ID of the site.
+            aggregation_level (str): The aggregation level (default: "HOUR").
+            time_ago_unit (str): The unit of time ago (default: "DAY").
+            time_ago_value (int): The value of time ago (default: 1).
+
+        Returns:
+            dict: The consumption breakdown data.
+
+        Raises:
+            Exception: If an error occurs while retrieving the data.
+
+        """
+
+        url = (f'{self.base_url}/aggregations/consumption-breakdown-time-ago?'
+                f'siteId={site_id}&'
+                f'aggregationLevel={aggregation_level}&'
+                f'timeAgoUnit={time_ago_unit}&'
+                f'timeAgoValue={time_ago_value}')
+
+        response = self.session.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving aggregations: {response.status_code}')
+
     def get_devices(self, site_id):
         """
         Retrieves a list of devices for the specified site.
@@ -139,45 +212,6 @@ class ComwattClient:
 
         url = (f'{self.base_url}/aggregations/device-ts-time-ago?'
                f'deviceId={device_id}&'
-               f'measureKind={measure_kind}&'
-               f'aggregationLevel={aggregation_level}&'
-               f'aggregationType={aggregation_type}&'
-               f'timeAgoUnit={time_ago_unit}&'
-               f'timeAgoValue={time_ago_value}')
-
-        response = self.session.get(url)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception(f'Error retrieving aggregations: {response.status_code}')
-
-    def get_site_networks_ts_time_ago(self, site_id,
-            measure_kind = "VIRTUAL_QUANTITY",
-            aggregation_level = "HOUR",
-            aggregation_type = "SUM",
-            time_ago_unit = "DAY",
-            time_ago_value = 1):
-        """
-        Retrieves the time series data for the networks of a specific site, based on the provided parameters.
-
-        Args:
-            site_id (str): The ID of the site.
-            measure_kind (str): The kind of measure (default: "VIRTUAL_QUANTITY").
-            aggregation_level (str): The aggregation level (default: "HOUR").
-            aggregation_type (str): The aggregation type (default: "SUM").
-            time_ago_unit (str): The unit of time ago (default: "DAY").
-            time_ago_value (int): The value of time ago (default: 1).
-
-        Returns:
-            dict: The time series data.
-
-        Raises:
-            Exception: If an error occurs while retrieving the data.
-
-        """
-
-        url = (f'{self.base_url}/aggregations/site-networks-ts-time-ago?'
-               f'siteId={site_id}&'
                f'measureKind={measure_kind}&'
                f'aggregationLevel={aggregation_level}&'
                f'aggregationType={aggregation_type}&'
