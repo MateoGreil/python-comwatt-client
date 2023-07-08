@@ -52,3 +52,12 @@ class ComwattClient:
             return response.json()
         else:
             raise Exception(f'Error retrieving aggregations: {response.status_code}')
+
+    def get_site_networks_ts_time_ago(self, site_id, measure_kind = "VIRTUAL_QUANTITY", aggregation_level = "HOUR", aggregation_type = "SUM", time_ago_unit = "DAY", time_ago_value = 1):
+        url = f'{self.base_url}/aggregations/site-networks-ts-time-ago?siteId={site_id}&measureKind={measure_kind}&aggregationLevel={aggregation_level}&aggregationType={aggregation_type}&timeAgoUnit={time_ago_unit}&timeAgoValue={time_ago_value}'
+
+        response = self.session.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving aggregations: {response.status_code}')
