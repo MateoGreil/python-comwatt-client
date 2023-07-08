@@ -10,18 +10,9 @@ class ComwattClient:
     # so you will need to encrypt it from their webapp
     def authenticate(self, username, password):
         url = f'{self.base_url}/v1/authent'
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Content-Type': 'application/json;charset=utf-8',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-origin'
-        }
         data = {'username': username, 'password': password}
 
-        response = self.session.post(url, headers=headers, json=data)
+        response = self.session.post(url, json=data)
 
         if response.status_code != 200:
             raise Exception(f'Authentication failed: {response.status_code}')    
