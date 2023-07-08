@@ -6,8 +6,8 @@ class ComwattClient:
         self.base_url = 'https://energy.comwatt.com/api'
         self.session = requests.Session()
 
-    # Password should be encrypted password, I don't know exactly what the encryption is for the moment,
-    # so you will need to encrypt it from their webapp
+    # Password should be encrypted password, I don't know exactly what the encryption is for the
+    # moment, so you will need to encrypt it from their webapp
     def authenticate(self, username, password):
         url = f'{self.base_url}/v1/authent'
         data = {'username': username, 'password': password}
@@ -15,7 +15,7 @@ class ComwattClient:
         response = self.session.post(url, json=data)
 
         if response.status_code != 200:
-            raise Exception(f'Authentication failed: {response.status_code}')    
+            raise Exception(f'Authentication failed: {response.status_code}')
 
     def get_authenticated_user(self):
         url = f'{self.base_url}/users/authenticated'
@@ -44,8 +44,15 @@ class ComwattClient:
         else:
             raise Exception(f'Error retrieving sites: {response.sttaus_code}')
 
-    def get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1"):
-        url = f'{self.base_url}/aggregations/device-ts-time-ago?deviceId={device_id}&measureKind={measure_kind}&aggregationLevel={aggregation_level}&aggregationType={aggregation_type}&timeAgoUnit={time_ago_unit}&timeAgoValue={time_ago_value}'
+    def get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR",
+            aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1"):
+        url = (f'{self.base_url}/aggregations/device-ts-time-ago?'
+               f'deviceId={device_id}&'
+               f'measureKind={measure_kind}&'
+               f'aggregationLevel={aggregation_level}&'
+               f'aggregationType={aggregation_type}&'
+               f'timeAgoUnit={time_ago_unit}&'
+               f'timeAgoValue={time_ago_value}')
 
         response = self.session.get(url)
         if response.status_code == 200:
@@ -53,8 +60,19 @@ class ComwattClient:
         else:
             raise Exception(f'Error retrieving aggregations: {response.status_code}')
 
-    def get_site_networks_ts_time_ago(self, site_id, measure_kind = "VIRTUAL_QUANTITY", aggregation_level = "HOUR", aggregation_type = "SUM", time_ago_unit = "DAY", time_ago_value = 1):
-        url = f'{self.base_url}/aggregations/site-networks-ts-time-ago?siteId={site_id}&measureKind={measure_kind}&aggregationLevel={aggregation_level}&aggregationType={aggregation_type}&timeAgoUnit={time_ago_unit}&timeAgoValue={time_ago_value}'
+    def get_site_networks_ts_time_ago(self, site_id,
+            measure_kind = "VIRTUAL_QUANTITY",
+            aggregation_level = "HOUR",
+            aggregation_type = "SUM",
+            time_ago_unit = "DAY",
+            time_ago_value = 1):
+        url = (f'{self.base_url}/aggregations/site-networks-ts-time-ago?'
+               f'siteId={site_id}&'
+               f'measureKind={measure_kind}&'
+               f'aggregationLevel={aggregation_level}&'
+               f'aggregationType={aggregation_type}&'
+               f'timeAgoUnit={time_ago_unit}&'
+               f'timeAgoValue={time_ago_value}')
 
         response = self.session.get(url)
         if response.status_code == 200:
