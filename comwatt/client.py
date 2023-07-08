@@ -4,6 +4,7 @@ import json
 class ComwattClient:
     def __init__(self):
         self.base_url = 'https://energy.comwatt.com/api'
+        self.session = requests.Session()
 
     def authenticate(self, username, password):
         url = f'{self.base_url}/v1/authent'
@@ -18,14 +19,34 @@ class ComwattClient:
         }
         data = {'username': username, 'password': password}
 
-        response = requests.post(url, headers=headers, json=data)
-        print(json.dumps(response.json()))
-        if response.status_code == 200:
-            auth_token = response.json().get('token')
-            if auth_token:
+        response = self.session.post(url, headers=headers, json=data)
 
-                return auth_token
-            else:
-                raise Exception('Authentication failed: No token received')
-        else:
+        if response.status_code != 200:
             raise Exception(f'Authentication failed: {response.status_code}')    
+
+    def get_authenticated_user(self):
+        url = f'{self.base_url}/users/authenticated'
+
+        response = self.session.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving authenticated user: {response.sttaus_code}')
+
+    def get_sites(self):
+        url = f'{self.base_url}/sites'
+
+        response = self.session.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving sites: {response.sttaus_code}')
+
+    def get_devices(self, site_id):
+        url = f'{self.base_url}/devices?siteId={site_id}'
+
+        response = self.session.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving sites: {response.sttaus_code}')
