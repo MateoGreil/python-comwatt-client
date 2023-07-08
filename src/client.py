@@ -1,5 +1,6 @@
 import requests
 import json
+import hashlib
 
 class ComwattClient:
     """
@@ -17,15 +18,13 @@ class ComwattClient:
         self.base_url = 'https://energy.comwatt.com/api'
         self.session = requests.Session()
 
-    # Password should be encrypted password, I don't know exactly what the encryption is for the
-    # moment, so you will need to encrypt it from their webapp
     def authenticate(self, username, password):
         """
         Authenticates a user with the provided username and password.
 
         Args:
             username (str): The username of the user.
-            password (str): The password of the user (encrypted).
+            password (str): The password of the user.
 
         Returns:
             None
@@ -36,7 +35,8 @@ class ComwattClient:
         """
 
         url = f'{self.base_url}/v1/authent'
-        data = {'username': username, 'password': password}
+        encoded_password = hashlib.sha256(f'jbjaonfusor_{password}_4acuttbuik9'.encode()).hexdigest()
+        data = {'username': username, 'password': encoded_password}
 
         response = self.session.post(url, json=data)
 

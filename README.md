@@ -32,9 +32,6 @@ from comwatt.client import ComwattClient
 client = ComwattClient()
 
 # Authenticate the user
-# Password should be encrypted password,
-# I don't know exactly what the encryption is for the moment,
-# so you will need to encrypt it from their webapp
 client.authenticate('username', 'password')
 
 # Get information about the authenticated user
