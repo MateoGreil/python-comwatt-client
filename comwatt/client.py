@@ -2,6 +2,17 @@ import requests
 import json
 
 class ComwattClient:
+    """
+    A client for interacting with the Comwatt API.
+
+    Args:
+        None
+
+    Attributes:
+        base_url (str): The base URL of the Comwatt API.
+        session (requests.Session): The session object for making HTTP requests.
+
+    """
     def __init__(self):
         self.base_url = 'https://energy.comwatt.com/api'
         self.session = requests.Session()
@@ -9,6 +20,21 @@ class ComwattClient:
     # Password should be encrypted password, I don't know exactly what the encryption is for the
     # moment, so you will need to encrypt it from their webapp
     def authenticate(self, username, password):
+        """
+        Authenticates a user with the provided username and password.
+
+        Args:
+            username (str): The username of the user.
+            password (str): The password of the user (encrypted).
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If the authentication fails.
+
+        """
+
         url = f'{self.base_url}/v1/authent'
         data = {'username': username, 'password': password}
 
@@ -18,6 +44,20 @@ class ComwattClient:
             raise Exception(f'Authentication failed: {response.status_code}')
 
     def get_authenticated_user(self):
+        """
+        Retrieves information about the authenticated user.
+
+        Args:
+            None
+
+        Returns:
+            dict: Information about the authenticated user.
+
+        Raises:
+            Exception: If an error occurs while retrieving the information.
+
+        """
+
         url = f'{self.base_url}/users/authenticated'
 
         response = self.session.get(url)
@@ -27,6 +67,20 @@ class ComwattClient:
             raise Exception(f'Error retrieving authenticated user: {response.sttaus_code}')
 
     def get_sites(self):
+        """
+        Retrieves a list of sites associated with the authenticated user.
+
+        Args:
+            None
+
+        Returns:
+            list: A list of sites.
+
+        Raises:
+            Exception: If an error occurs while retrieving the sites.
+
+        """
+
         url = f'{self.base_url}/sites'
 
         response = self.session.get(url)
@@ -36,6 +90,20 @@ class ComwattClient:
             raise Exception(f'Error retrieving sites: {response.sttaus_code}')
 
     def get_devices(self, site_id):
+        """
+        Retrieves a list of devices for the specified site.
+
+        Args:
+            site_id (str): The ID of the site.
+
+        Returns:
+            list: A list of devices.
+
+        Raises:
+            Exception: If an error occurs while retrieving the devices.
+
+        """
+
         url = f'{self.base_url}/devices?siteId={site_id}'
 
         response = self.session.get(url)
@@ -44,8 +112,31 @@ class ComwattClient:
         else:
             raise Exception(f'Error retrieving sites: {response.sttaus_code}')
 
-    def get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR",
-            aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1"):
+    def get_device_ts_time_ago(self, device_id,
+            measure_kind = "FLOW",
+            aggregation_level = "HOUR",
+            aggregation_type = "MAX",
+            time_ago_unit = "DAY",
+            time_ago_value = "1"):
+        """
+        Retrieves the time series data for a specific device, based on the provided parameters.
+
+        Args:
+            device_id (str): The ID of the device.
+            measure_kind (str): The kind of measure (default: "FLOW").
+            aggregation_level (str): The aggregation level (default: "HOUR").
+            aggregation_type (str): The aggregation type (default: "MAX").
+            time_ago_unit (str): The unit of time ago (default: "DAY").
+            time_ago_value (str): The value of time ago (default: "1").
+
+        Returns:
+            dict: The time series data.
+
+        Raises:
+            Exception: If an error occurs while retrieving the data.
+
+        """
+
         url = (f'{self.base_url}/aggregations/device-ts-time-ago?'
                f'deviceId={device_id}&'
                f'measureKind={measure_kind}&'
@@ -66,6 +157,25 @@ class ComwattClient:
             aggregation_type = "SUM",
             time_ago_unit = "DAY",
             time_ago_value = 1):
+        """
+        Retrieves the time series data for the networks of a specific site, based on the provided parameters.
+
+        Args:
+            site_id (str): The ID of the site.
+            measure_kind (str): The kind of measure (default: "VIRTUAL_QUANTITY").
+            aggregation_level (str): The aggregation level (default: "HOUR").
+            aggregation_type (str): The aggregation type (default: "SUM").
+            time_ago_unit (str): The unit of time ago (default: "DAY").
+            time_ago_value (int): The value of time ago (default: 1).
+
+        Returns:
+            dict: The time series data.
+
+        Raises:
+            Exception: If an error occurs while retrieving the data.
+
+        """
+
         url = (f'{self.base_url}/aggregations/site-networks-ts-time-ago?'
                f'siteId={site_id}&'
                f'measureKind={measure_kind}&'
