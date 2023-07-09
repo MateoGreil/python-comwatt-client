@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='comwatt-client',
-    version='0.1.2',
+    version='0.1.6',
     author='Matéo Greil',
     author_email='contact@greil.fr',
     description='Python Client for Comwatt API',
