@@ -14,14 +14,8 @@ class ComwattClient:
         session (requests.Session): The session object for making HTTP requests.
 
     """
-
-    API_ENDPOINTS = {
-        'energy': 'https://energy.comwatt.com/api',
-        'go': 'https://go.comwatt.com/api'
-    }
-
-    def __init__(self, api = 'energy'):
-        self.base_url = self.API_ENDPOINTS[api]
+    def __init__(self):
+        self.base_url = 'https://energy.comwatt.com/api'
         self.session = requests.Session()
 
     def authenticate(self, username, password):
