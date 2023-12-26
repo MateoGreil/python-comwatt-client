@@ -14,7 +14,8 @@ The client currently supports the following methods:
 - `get_site_consumption_breakdown_time_ago(self, site_id, aggregation_level = "HOUR", time_ago_unit = "DAY", time_ago_value = 1)` Retrieves the consumption breakdown data for a specific site, based on the provided parameters.
 - `get_devices(self, site_id)`: Retrieves a list of devices for the specified site.
 - `get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1")`: Retrieves the time series data for a specific device, based on the provided parameters.
-
+- `get_device(self, device_id)`: Retrieves information about a specific device.
+- `put_device(self, device_id, payload)`: Updates a specific device with the provided payload.
 
 ## Installation
 You can install the Comwatt Python Client using pip. Run the following command:
@@ -58,6 +59,11 @@ print(devices)
 # Get time series data for a specific device
 time_series_data = client.get_device_ts_time_ago(devices[0]['id'])
 print(time_series_data)
+
+# Set the control mode of a specific device to MANUL
+device = client.get_device(devices[0]['id'])
+device['configuration']['controlMode'] = 'MANUAL'
+client.put_device(device['id'], device)
 ```
 
 Make sure to replace `'username'`, `'password'` with the actual values for your Comwatt account.

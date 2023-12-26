@@ -187,6 +187,46 @@ class ComwattClient:
         else:
             raise Exception(f'Error retrieving sites: {response.status_code}')
 
+    def get_device(self, device_id):
+        """
+        Retrieves information about a specific device.
+
+        Args:
+            device_id (str): The ID of the device.
+
+        Returns:
+            dict: A dictionary containing the device information.
+
+        """
+        url = f'{self.base_url}/devices/{device_id}'
+
+        response = self.session.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving device {device_id}: {response.status_code}')
+
+    def put_device(self, device_id, payload):
+        """
+        Updates a specific device with the provided payload.
+
+        Args:
+            device_id (str): The ID of the device.
+            payload (dict): The payload to update the device.
+
+        Returns:
+            dict: A dictionary containing the response from the API.
+
+        """
+        url = f'{self.base_url}/devices/{device_id}'
+
+        response = self.session.put(url, json=payload)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving sites: {response.status_code}')
+
+
     def get_device_ts_time_ago(self, device_id,
             measure_kind = "FLOW",
             aggregation_level = "HOUR",
