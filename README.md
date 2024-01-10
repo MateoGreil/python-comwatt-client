@@ -2,7 +2,7 @@
 
 ## Overview
 The Comwatt Python Client is a Python library that provides a convenient way to interact with the Comwatt API. It allows you to authenticate users, retrieve authenticated user information, and access site and device data.
-Please note that the Comwatt client is exclusively for gen4 devices. **Versions below gen4 will not be compatible**.
+Please note that the Comwatt client is exclusively for gen4 devices: it use `energy.comwatt.com/api`. **Versions below gen4 will not be compatible**. If you're looking for the `go.comwatt.com/api` go to [python-comwatt-client-legacy](https://github.com/MateoGreil/python-comwatt-client-legacy).
 
 ## Features
 The client currently supports the following methods:
