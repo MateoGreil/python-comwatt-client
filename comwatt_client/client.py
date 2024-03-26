@@ -265,3 +265,23 @@ class ComwattClient:
             return response.json()
         else:
             raise Exception(f'Error retrieving aggregations: {response.status_code}')
+
+    def switch_capacity(self, capacity_id, enable):
+        """
+        Switch a specific capcaity to the enable value.
+
+        Args:
+            capacity_id (str): The ID of the capacity.
+            enable (bool): The target state.
+
+        Returns:
+            dict: A dictionary containing the response from the API.
+
+        """
+        url = f'{self.base_url}/capacities/{capacity_id}/switch?enable={enable}'
+
+        response = self.session.put(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f'Error retrieving sites: {response.status_code}')

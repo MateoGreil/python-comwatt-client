@@ -64,6 +64,15 @@ print(time_series_data)
 device = client.get_device(devices[0]['id'])
 device['configuration']['controlMode'] = 'MANUAL'
 client.put_device(device['id'], device)
+
+# Switch the POWER_SWITCH capacity
+for feature in device['features']:
+    for capacity in feature['capacities']:
+        if capacity.get('capacity', {}).get('nature') == "POWER_SWITCH":
+            capacity_id = capacity['capacity']['id']
+client.switch_capacity(capacity_id, False)
+client.switch_capacity(capacity_id, True)
+
 ```
 
 Make sure to replace `'username'`, `'password'` with the actual values for your Comwatt account.
