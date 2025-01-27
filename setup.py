@@ -1,11 +1,17 @@
 from setuptools import setup, find_packages
 
+with open("README.md", 'r') as f:
+    long_description = f.read()
+
 setup(
     name='comwatt-client',
     version='0.2.1',
     author='Matéo Greil',
     author_email='contact@greil.fr',
     description='Python Client for Comwatt API',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    url="https://github.com/MateoGreil/python-comwatt-client",
     packages=find_packages(),
     install_requires=[
         'requests',
