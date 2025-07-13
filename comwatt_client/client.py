@@ -252,8 +252,8 @@ class ComwattClient:
 
         """
 
-        url = (f'{self.base_url}/aggregations/device-ts-time-ago?'
-               f'deviceId={device_id}&'
+        url = (f'{self.base_url}/aggregations/time-series?'
+               f'id={device_id}&'
                f'measureKind={measure_kind}&'
                f'aggregationLevel={aggregation_level}&'
                f'aggregationType={aggregation_type}&'
@@ -264,7 +264,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving aggregations: {response.status_code}')
+            raise Exception(f'Error retrieving aggregations: {response.status_code} for url {url}')
 
     def switch_capacity(self, capacity_id, enable):
         """
