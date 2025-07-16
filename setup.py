@@ -5,7 +5,7 @@ with open("README.md", 'r') as f:
 
 setup(
     name='comwatt-client',
-    version='0.2.2',
+    version='0.2.3',
     author='Matéo Greil',
     author_email='contact@greil.fr',
     description='Python Client for Comwatt API',
