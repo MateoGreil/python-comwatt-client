@@ -14,9 +14,10 @@ class ComwattClient:
         session (requests.Session): The session object for making HTTP requests.
 
     """
-    def __init__(self):
+    def __init__(self, timeout=30):
         self.base_url = 'https://energy.comwatt.com/api'
         self.session = requests.Session()
+        self.timeout = timeout
 
     def authenticate(self, username, password):
         """
@@ -38,7 +39,7 @@ class ComwattClient:
         encoded_password = hashlib.sha256(f'jbjaonfusor_{password}_4acuttbuik9'.encode()).hexdigest()
         data = {'username': username, 'password': encoded_password}
 
-        response = self.session.post(url, json=data)
+        response = self.session.post(url, json=data, timeout=self.timeout)
 
         if response.status_code != 200:
             raise Exception(f'Authentication failed: {response.status_code}')
@@ -60,7 +61,7 @@ class ComwattClient:
 
         url = f'{self.base_url}/users/authenticated'
 
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
@@ -83,7 +84,7 @@ class ComwattClient:
 
         url = f'{self.base_url}/sites'
 
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
@@ -125,7 +126,7 @@ class ComwattClient:
         if aggregation_type != None:
             url += f'&aggregationType={aggregation_type}'
 
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
@@ -158,7 +159,7 @@ class ComwattClient:
                 f'timeAgoUnit={time_ago_unit}&'
                 f'timeAgoValue={time_ago_value}')
 
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
@@ -181,7 +182,7 @@ class ComwattClient:
 
         url = f'{self.base_url}/devices?siteId={site_id}'
 
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
@@ -200,7 +201,7 @@ class ComwattClient:
         """
         url = f'{self.base_url}/devices/{device_id}'
 
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
@@ -220,7 +221,7 @@ class ComwattClient:
         """
         url = f'{self.base_url}/devices/{device_id}'
 
-        response = self.session.put(url, json=payload)
+        response = self.session.put(url, json=payload, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
@@ -260,7 +261,7 @@ class ComwattClient:
                f'timeAgoUnit={time_ago_unit}&'
                f'timeAgoValue={time_ago_value}')
 
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
@@ -280,7 +281,7 @@ class ComwattClient:
         """
         url = f'{self.base_url}/capacities/{capacity_id}/switch?enable={enable}'
 
-        response = self.session.put(url)
+        response = self.session.put(url, timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         else:
