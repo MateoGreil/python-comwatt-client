@@ -12,10 +12,22 @@ The client currently supports the following methods:
 - `is_authenticated(self)`: Returns whether the current session is still valid (probes the API; `True`/`False`, re-raises unexpected errors).
 - `get_authenticated_user(self)`: Retrieves information about the authenticated user.
 - `get_sites(self)`: Retrieves a list of sites associated with the authenticated user.
-- `get_site_networks_ts_time_ago(self, site_id, measure_kind = "FLOW", aggregation_level = "NONE", aggregation_type = None, time_ago_unit = "HOUR", time_ago_value = 1)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters.
-- `get_site_consumption_breakdown_time_ago(self, site_id, aggregation_level = "HOUR", time_ago_unit = "DAY", time_ago_value = 1)` Retrieves the consumption breakdown data for a specific site, based on the provided parameters.
+- `get_site_networks_ts_time_ago(self, site_id, measure_kind = "FLOW", aggregation_level = "NONE", aggregation_type = None, time_ago_unit = "HOUR", time_ago_value = 1, start = None, end = None)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters.
+- `get_site_consumption_breakdown_time_ago(self, site_id, aggregation_level = "HOUR", time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)` Retrieves the consumption breakdown data for a specific site, based on the provided parameters.
 - `get_devices(self, site_id)`: Retrieves a list of devices for the specified site.
-- `get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1")`: Retrieves the time series data for a specific device, based on the provided parameters.
+- `get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1", start = None, end = None)`: Retrieves the time series data for a specific device, based on the provided parameters.
+
+`start`/`end` accept a `datetime` or ISO-8601 string and select an absolute window instead of the relative `time_ago_*` params; a naive `datetime` is treated as UTC:
+
+```python
+from datetime import datetime
+
+client.get_device_ts_time_ago(
+    "device-1",
+    start=datetime(2026, 7, 4, 0, 0, 0),
+    end=datetime(2026, 7, 5, 0, 0, 0),
+)
+```
 - `get_device(self, device_id)`: Retrieves information about a specific device.
 - `put_device(self, device_id, payload)`: Updates a specific device with the provided payload.
 

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -185,6 +186,238 @@ def test_get_device_ts_time_ago_defaults(client):
     assert qs["aggregationType"] == ["MAX"]
     assert qs["timeAgoUnit"] == ["DAY"]
     assert qs["timeAgoValue"] == ["1"]
+
+
+@responses.activate
+def test_get_site_networks_ts_time_ago_with_naive_start(client):
+    mock_data = {"values": [1]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-networks-ts-time-ago",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_networks_ts_time_ago(
+        "site-1", start=datetime(2026, 7, 4, 10, 0, 0)
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T10:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+    assert "end" not in qs
+    assert qs["measureKind"] == ["FLOW"]
+    assert qs["aggregationLevel"] == ["NONE"]
+
+
+@responses.activate
+def test_get_site_networks_ts_time_ago_with_start_and_end(client):
+    mock_data = {"values": [2]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-networks-ts-time-ago",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_networks_ts_time_ago(
+        "site-1",
+        start=datetime(2026, 7, 4, 0, 0, 0),
+        end=datetime(2026, 7, 5, 0, 0, 0),
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T00:00:00Z"]
+    assert qs["end"] == ["2026-07-05T00:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+
+
+@responses.activate
+def test_get_site_networks_ts_time_ago_with_aware_start(client):
+    mock_data = {"values": [3]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-networks-ts-time-ago",
+        json=mock_data,
+        status=200,
+    )
+
+    aware = datetime(2026, 7, 4, 12, 0, 0, tzinfo=timezone(timedelta(hours=2)))
+    result = client.get_site_networks_ts_time_ago("site-1", start=aware)
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T10:00:00Z"]
+
+
+@responses.activate
+def test_get_site_networks_ts_time_ago_with_string_start(client):
+    mock_data = {"values": [4]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-networks-ts-time-ago",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_networks_ts_time_ago(
+        "site-1", start="2026-07-04T10:00:00Z"
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T10:00:00Z"]
+
+
+@responses.activate
+def test_get_site_networks_ts_time_ago_end_without_start_raises(client):
+    with pytest.raises(ValueError):
+        client.get_site_networks_ts_time_ago(
+            "site-1", end=datetime(2026, 7, 4, 10, 0, 0)
+        )
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_get_site_consumption_breakdown_time_ago_with_start_and_end(client):
+    mock_data = {"breakdown": "windowed"}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/consumption-breakdown-time-ago",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_consumption_breakdown_time_ago(
+        "site-1",
+        start=datetime(2026, 7, 4, 0, 0, 0),
+        end=datetime(2026, 7, 5, 0, 0, 0),
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T00:00:00Z"]
+    assert qs["end"] == ["2026-07-05T00:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+
+
+@responses.activate
+def test_get_site_consumption_breakdown_time_ago_end_without_start_raises(client):
+    with pytest.raises(ValueError):
+        client.get_site_consumption_breakdown_time_ago(
+            "site-1", end=datetime(2026, 7, 4, 10, 0, 0)
+        )
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_get_device_ts_time_ago_with_naive_start(client):
+    mock_data = {"series": [1]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_device_ts_time_ago(
+        "device-1", start=datetime(2026, 7, 4, 10, 0, 0)
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T10:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+    assert qs["measureKind"] == ["FLOW"]
+    assert qs["aggregationType"] == ["MAX"]
+
+
+@responses.activate
+def test_get_device_ts_time_ago_with_start_and_end(client):
+    mock_data = {"series": [2]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_device_ts_time_ago(
+        "device-1",
+        start=datetime(2026, 7, 4, 0, 0, 0),
+        end=datetime(2026, 7, 5, 0, 0, 0),
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T00:00:00Z"]
+    assert qs["end"] == ["2026-07-05T00:00:00Z"]
+
+
+@responses.activate
+def test_get_device_ts_time_ago_with_aware_start(client):
+    mock_data = {"series": [3]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    aware = datetime(2026, 7, 4, 12, 0, 0, tzinfo=timezone(timedelta(hours=2)))
+    result = client.get_device_ts_time_ago("device-1", start=aware)
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T10:00:00Z"]
+
+
+@responses.activate
+def test_get_device_ts_time_ago_with_string_start(client):
+    mock_data = {"series": [4]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_device_ts_time_ago("device-1", start="2026-07-04T10:00:00Z")
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T10:00:00Z"]
+
+
+@responses.activate
+def test_get_device_ts_time_ago_end_without_start_raises(client):
+    with pytest.raises(ValueError):
+        client.get_device_ts_time_ago("device-1", end=datetime(2026, 7, 4, 10, 0, 0))
+    assert len(responses.calls) == 0
 
 
 @responses.activate
