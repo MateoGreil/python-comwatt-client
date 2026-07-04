@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import requests
 import json
 import hashlib
 
-from .exceptions import ComwattAPIError, ComwattAuthError
+from types import TracebackType
+from typing import Any, TYPE_CHECKING
+
+from .exceptions import ComwattAPIError, ComwattAuthError, ComwattError
 
 
-def _response_detail(response):
+def _response_detail(response: requests.Response) -> str | None:
     try:
         body = response.json()
     except ValueError:
@@ -15,7 +20,7 @@ def _response_detail(response):
     return None
 
 
-def _api_error(response):
+def _api_error(response: requests.Response) -> ComwattError:
     detail = _response_detail(response)
     exc_cls = ComwattAuthError if response.status_code == 401 else ComwattAPIError
     return exc_cls(status_code=response.status_code, url=response.url, detail=detail, response=response)
@@ -33,19 +38,19 @@ class ComwattClient:
         session (requests.Session): The session object for making HTTP requests.
 
     """
-    def __init__(self, timeout=30, auto_reauth=True):
+    def __init__(self, timeout: float = 30, auto_reauth: bool = True) -> None:
         self.base_url = 'https://energy.comwatt.com/api'
         self.session = requests.Session()
         self.timeout = timeout
         self.auto_reauth = auto_reauth
-        self._username = None
-        self._auth_hash = None
+        self._username: str | None = None
+        self._auth_hash: str | None = None
 
     @staticmethod
-    def _hash_password(password):
+    def _hash_password(password: str) -> str:
         return hashlib.sha256(f'jbjaonfusor_{password}_4acuttbuik9'.encode()).hexdigest()
 
-    def _post_authent(self, username, password_hash):
+    def _post_authent(self, username: str, password_hash: str) -> None:
         url = f'{self.base_url}/v1/authent'
         data = {'username': username, 'password': password_hash}
 
@@ -58,7 +63,7 @@ class ComwattClient:
         if not self.session.cookies.get("cwt_session"):
             raise ComwattAuthError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
 
-    def authenticate(self, username, password):
+    def authenticate(self, username: str, password: str) -> None:
         """
         Authenticates a user with the provided username and password.
 
@@ -80,13 +85,13 @@ class ComwattClient:
         self._username = username
         self._auth_hash = password_hash
 
-    def _reauthenticate(self):
+    def _reauthenticate(self) -> None:
         if self._username and self._auth_hash:
             self._post_authent(self._username, self._auth_hash)
         else:
             raise ComwattAuthError("Session expired and no stored credentials to re-authenticate")
 
-    def _request(self, method, path, **kwargs):
+    def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
         url = f'{self.base_url}{path}'
         response = self.session.request(method, url, timeout=self.timeout, **kwargs)
         if response.status_code == 200:
@@ -101,7 +106,7 @@ class ComwattClient:
 
         raise _api_error(response)
 
-    def is_authenticated(self):
+    def is_authenticated(self) -> bool:
         """
         Checks whether the current session cookie is still accepted by the API.
 
@@ -127,7 +132,7 @@ class ComwattClient:
         else:
             raise _api_error(response)
 
-    def get_authenticated_user(self):
+    def get_authenticated_user(self) -> dict[str, Any]:
         """
         Retrieves information about the authenticated user.
 
@@ -144,7 +149,7 @@ class ComwattClient:
 
         return self._request("GET", "/users/authenticated").json()
 
-    def get_sites(self):
+    def get_sites(self) -> list[dict[str, Any]]:
         """
         Retrieves a list of sites associated with the authenticated user.
 
@@ -162,12 +167,12 @@ class ComwattClient:
         return self._request("GET", "/sites").json()
 
 
-    def get_site_networks_ts_time_ago(self, site_id,
-            measure_kind = "FLOW",
-            aggregation_level = "NONE",
-            aggregation_type = None,
-            time_ago_unit = "HOUR",
-            time_ago_value = 1):
+    def get_site_networks_ts_time_ago(self, site_id: int | str,
+            measure_kind: str = "FLOW",
+            aggregation_level: str = "NONE",
+            aggregation_type: str | None = None,
+            time_ago_unit: str = "HOUR",
+            time_ago_value: int | str = 1) -> dict[str, Any]:
         """
         Retrieves the time series data for the networks of a specific site, based on the provided parameters.
 
@@ -199,10 +204,10 @@ class ComwattClient:
 
         return self._request("GET", path).json()
 
-    def get_site_consumption_breakdown_time_ago(self, site_id,
-            aggregation_level = "HOUR",
-            time_ago_unit = "DAY",
-            time_ago_value = 1):
+    def get_site_consumption_breakdown_time_ago(self, site_id: int | str,
+            aggregation_level: str = "HOUR",
+            time_ago_unit: str = "DAY",
+            time_ago_value: int | str = 1) -> dict[str, Any]:
         """
         Retrieves the consumption breakdown data for a specific site, based on the provided parameters.
 
@@ -228,7 +233,7 @@ class ComwattClient:
 
         return self._request("GET", path).json()
 
-    def get_devices(self, site_id):
+    def get_devices(self, site_id: int | str) -> list[dict[str, Any]]:
         """
         Retrieves a list of devices for the specified site.
 
@@ -245,7 +250,7 @@ class ComwattClient:
 
         return self._request("GET", f"/devices?siteId={site_id}").json()
 
-    def get_device(self, device_id):
+    def get_device(self, device_id: int | str) -> dict[str, Any]:
         """
         Retrieves information about a specific device.
 
@@ -258,7 +263,7 @@ class ComwattClient:
         """
         return self._request("GET", f"/devices/{device_id}").json()
 
-    def put_device(self, device_id, payload):
+    def put_device(self, device_id: int | str, payload: dict[str, Any]) -> dict[str, Any]:
         """
         Updates a specific device with the provided payload.
 
@@ -273,12 +278,12 @@ class ComwattClient:
         return self._request("PUT", f"/devices/{device_id}", json=payload).json()
 
 
-    def get_device_ts_time_ago(self, device_id,
-            measure_kind = "FLOW",
-            aggregation_level = "HOUR",
-            aggregation_type = "MAX",
-            time_ago_unit = "DAY",
-            time_ago_value = "1"):
+    def get_device_ts_time_ago(self, device_id: int | str,
+            measure_kind: str = "FLOW",
+            aggregation_level: str = "HOUR",
+            aggregation_type: str = "MAX",
+            time_ago_unit: str = "DAY",
+            time_ago_value: int | str = "1") -> dict[str, Any]:
         """
         Retrieves the time series data for a specific device, based on the provided parameters.
 
@@ -308,7 +313,7 @@ class ComwattClient:
 
         return self._request("GET", path).json()
 
-    def switch_capacity(self, capacity_id, enable):
+    def switch_capacity(self, capacity_id: int | str, enable: bool) -> dict[str, Any]:
         """
         Switch a specific capcaity to the enable value.
 
@@ -322,7 +327,7 @@ class ComwattClient:
         """
         return self._request("PUT", f"/capacities/{capacity_id}/switch?enable={str(enable).lower()}").json()
 
-    def close(self):
+    def close(self) -> None:
         """
         Releases the local HTTP resources held by the client.
 
@@ -343,7 +348,7 @@ class ComwattClient:
 
         self.session.close()
 
-    def __enter__(self):
+    def __enter__(self) -> ComwattClient:
         """
         Enters the runtime context for this client.
 
@@ -357,7 +362,7 @@ class ComwattClient:
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
         """
         Exits the runtime context, closing the client's local resources.
 

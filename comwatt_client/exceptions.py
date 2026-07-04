@@ -1,7 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import requests
+
+
 class ComwattError(Exception):
     """Base class for all errors raised by the Comwatt client."""
 
-    def __init__(self, message=None, *, status_code=None, url=None, detail=None, response=None):
+    def __init__(self, message: str | None = None, *, status_code: int | None = None, url: str | None = None, detail: str | None = None, response: requests.Response | None = None) -> None:
         self.status_code = status_code
         self.url = url
         self.detail = detail
