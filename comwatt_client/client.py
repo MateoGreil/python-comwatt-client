@@ -321,3 +321,54 @@ class ComwattClient:
 
         """
         return self._request("PUT", f"/capacities/{capacity_id}/switch?enable={str(enable).lower()}").json()
+
+    def close(self):
+        """
+        Releases the local HTTP resources held by the client.
+
+        This only closes the local `requests.Session` (its connection pool
+        and sockets). It does not perform any network call, so it does not
+        log out server-side (no `POST /v1/logout` is issued) and does not
+        invalidate the Comwatt server session.
+
+        Safe to call multiple times.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+
+        self.session.close()
+
+    def __enter__(self):
+        """
+        Enters the runtime context for this client.
+
+        Args:
+            None
+
+        Returns:
+            ComwattClient: This client instance.
+
+        """
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exits the runtime context, closing the client's local resources.
+
+        Args:
+            exc_type (type): The exception type, if any.
+            exc_val (Exception): The exception instance, if any.
+            exc_tb (traceback): The exception traceback, if any.
+
+        Returns:
+            None
+
+        """
+
+        self.close()
