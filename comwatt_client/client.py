@@ -33,10 +33,30 @@ class ComwattClient:
         session (requests.Session): The session object for making HTTP requests.
 
     """
-    def __init__(self, timeout=30):
+    def __init__(self, timeout=30, auto_reauth=True):
         self.base_url = 'https://energy.comwatt.com/api'
         self.session = requests.Session()
         self.timeout = timeout
+        self.auto_reauth = auto_reauth
+        self._username = None
+        self._auth_hash = None
+
+    @staticmethod
+    def _hash_password(password):
+        return hashlib.sha256(f'jbjaonfusor_{password}_4acuttbuik9'.encode()).hexdigest()
+
+    def _post_authent(self, username, password_hash):
+        url = f'{self.base_url}/v1/authent'
+        data = {'username': username, 'password': password_hash}
+
+        response = self.session.post(url, json=data, timeout=self.timeout)
+
+        if response.status_code != 200:
+            detail = _response_detail(response)
+            raise ComwattAuthError(status_code=response.status_code, url=response.url, detail=detail, response=response)
+
+        if not self.session.cookies.get("cwt_session"):
+            raise ComwattAuthError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
 
     def authenticate(self, username, password):
         """
@@ -54,26 +74,32 @@ class ComwattClient:
 
         """
 
-        url = f'{self.base_url}/v1/authent'
-        encoded_password = hashlib.sha256(f'jbjaonfusor_{password}_4acuttbuik9'.encode()).hexdigest()
-        data = {'username': username, 'password': encoded_password}
+        password_hash = self._hash_password(password)
+        self._post_authent(username, password_hash)
 
-        response = self.session.post(url, json=data, timeout=self.timeout)
+        self._username = username
+        self._auth_hash = password_hash
 
-        if response.status_code != 200:
-            detail = _response_detail(response)
-            raise ComwattAuthError(status_code=response.status_code, url=response.url, detail=detail, response=response)
-
-        if not self.session.cookies.get("cwt_session"):
-            raise ComwattAuthError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
+    def _reauthenticate(self):
+        if self._username and self._auth_hash:
+            self._post_authent(self._username, self._auth_hash)
+        else:
+            raise ComwattAuthError("Session expired and no stored credentials to re-authenticate")
 
     def _request(self, method, path, **kwargs):
         url = f'{self.base_url}{path}'
         response = self.session.request(method, url, timeout=self.timeout, **kwargs)
         if response.status_code == 200:
             return response
-        else:
-            raise _api_error(response)
+
+        if response.status_code == 401 and self.auto_reauth and self._username and self._auth_hash:
+            self._reauthenticate()
+            retry_response = self.session.request(method, url, timeout=self.timeout, **kwargs)
+            if retry_response.status_code == 200:
+                return retry_response
+            raise _api_error(retry_response)
+
+        raise _api_error(response)
 
     def is_authenticated(self):
         """

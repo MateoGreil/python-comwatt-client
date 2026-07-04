@@ -8,7 +8,7 @@ Please note that the Comwatt client is exclusively for gen4 devices: it use `ene
 ## Features
 The client currently supports the following methods:
 
-- `authenticate(self, username, password)`: Authenticates a user with the provided username and password.
+- `authenticate(self, username, password)`: Authenticates a user with the provided username and password. The client re-authenticates automatically on session expiry (HTTP 401) and retries the request once; pass `ComwattClient(auto_reauth=False)` to disable this.
 - `is_authenticated(self)`: Returns whether the current session is still valid (probes the API; `True`/`False`, re-raises unexpected errors).
 - `get_authenticated_user(self)`: Retrieves information about the authenticated user.
 - `get_sites(self)`: Retrieves a list of sites associated with the authenticated user.
