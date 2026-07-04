@@ -3,6 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 import responses
 
+from comwatt_client import ComwattAPIError
 from tests.conftest import BASE_URL
 
 
@@ -88,7 +89,7 @@ def test_get_site_networks_ts_time_ago_error(client):
         status=500,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.get_site_networks_ts_time_ago("site-1")
 
     assert "500" in str(exc_info.value)
@@ -154,7 +155,7 @@ def test_get_site_consumption_breakdown_time_ago_error(client):
         status=404,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.get_site_consumption_breakdown_time_ago("site-1")
 
     assert "404" in str(exc_info.value)
@@ -195,7 +196,7 @@ def test_get_device_ts_time_ago_error(client):
         status=500,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.get_device_ts_time_ago("device-1")
 
     assert "500" in str(exc_info.value)

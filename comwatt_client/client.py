@@ -2,6 +2,25 @@ import requests
 import json
 import hashlib
 
+from .exceptions import ComwattAPIError, ComwattAuthError
+
+
+def _response_detail(response):
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    if isinstance(body, dict):
+        return body.get("detail")
+    return None
+
+
+def _api_error(response):
+    detail = _response_detail(response)
+    exc_cls = ComwattAuthError if response.status_code == 401 else ComwattAPIError
+    return exc_cls(status_code=response.status_code, url=response.url, detail=detail, response=response)
+
+
 class ComwattClient:
     """
     A client for interacting with the Comwatt API.
@@ -42,7 +61,8 @@ class ComwattClient:
         response = self.session.post(url, json=data, timeout=self.timeout)
 
         if response.status_code != 200:
-            raise Exception(f'Authentication failed: {response.status_code}')
+            detail = _response_detail(response)
+            raise ComwattAuthError(status_code=response.status_code, url=response.url, detail=detail, response=response)
 
     def get_authenticated_user(self):
         """
@@ -65,7 +85,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving authenticated user: {response.status_code}')
+            raise _api_error(response)
 
     def get_sites(self):
         """
@@ -88,7 +108,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving sites: {response.status_code}')
+            raise _api_error(response)
 
 
     def get_site_networks_ts_time_ago(self, site_id,
@@ -130,7 +150,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving aggregations: {response.status_code}')
+            raise _api_error(response)
 
     def get_site_consumption_breakdown_time_ago(self, site_id,
             aggregation_level = "HOUR",
@@ -163,7 +183,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving aggregations: {response.status_code}')
+            raise _api_error(response)
 
     def get_devices(self, site_id):
         """
@@ -186,7 +206,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving devices: {response.status_code}')
+            raise _api_error(response)
 
     def get_device(self, device_id):
         """
@@ -205,7 +225,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving device {device_id}: {response.status_code}')
+            raise _api_error(response)
 
     def put_device(self, device_id, payload):
         """
@@ -225,7 +245,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error updating device {device_id}: {response.status_code}')
+            raise _api_error(response)
 
 
     def get_device_ts_time_ago(self, device_id,
@@ -265,7 +285,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving aggregations: {response.status_code} for url {url}')
+            raise _api_error(response)
 
     def switch_capacity(self, capacity_id, enable):
         """
@@ -285,4 +305,4 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error switching capacity {capacity_id}: {response.status_code}')
+            raise _api_error(response)

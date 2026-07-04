@@ -3,6 +3,7 @@ import json
 import pytest
 import responses
 
+from comwatt_client import ComwattAuthError
 from tests.conftest import BASE_URL
 
 
@@ -39,7 +40,7 @@ def test_authenticate_error(client):
         status=401,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAuthError) as exc_info:
         client.authenticate("testuser", "testpass")
 
     assert "401" in str(exc_info.value)

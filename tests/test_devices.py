@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 import responses
 
+from comwatt_client import ComwattAPIError
 from tests.conftest import BASE_URL
 
 
@@ -37,7 +38,7 @@ def test_get_devices_error(client):
         status=500,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.get_devices("site-1")
 
     assert "500" in str(exc_info.value)
@@ -70,7 +71,7 @@ def test_get_device_error(client):
         status=404,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.get_device("device-1")
 
     assert "device-1" in str(exc_info.value)
@@ -107,7 +108,7 @@ def test_put_device_error(client):
         status=500,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.put_device("device-1", payload)
 
     assert "500" in str(exc_info.value)
@@ -164,7 +165,7 @@ def test_switch_capacity_error(client):
         status=500,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.switch_capacity("capacity-1", True)
 
     assert "500" in str(exc_info.value)

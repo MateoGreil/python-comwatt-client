@@ -1,6 +1,7 @@
 import pytest
 import responses
 
+from comwatt_client import ComwattAPIError
 from tests.conftest import BASE_URL
 
 
@@ -32,7 +33,7 @@ def test_get_authenticated_user_error(client):
         status=500,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.get_authenticated_user()
 
     assert "500" in str(exc_info.value)
@@ -66,7 +67,7 @@ def test_get_sites_error(client):
         status=404,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.get_sites()
 
     assert "404" in str(exc_info.value)

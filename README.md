@@ -78,5 +78,25 @@ client.switch_capacity(capacity_id, True)
 
 Make sure to replace `'username'`, `'password'` with the actual values for your Comwatt account.
 
+## Error handling
+
+All errors raised by the client subclass `ComwattError`:
+
+- `ComwattAuthError` — login failed or the session expired (HTTP 401). Re-authenticate.
+- `ComwattAPIError` — any other unexpected HTTP status. Exposes `.status_code`, `.url`, `.detail`.
+
+```python
+from comwatt_client import ComwattClient, ComwattAuthError, ComwattAPIError
+
+client = ComwattClient()
+try:
+    client.authenticate("username", "password")
+    sites = client.get_sites()
+except ComwattAuthError:
+    ...  # credentials wrong or session expired — re-authenticate
+except ComwattAPIError as e:
+    print(e.status_code, e.url, e.detail)
+```
+
 ## Contributing
 Contributions to the Comwatt Python Client are welcome! If you find any issues or have suggestions for improvement, please open an issue or submit a pull request on the GitHub repository.
