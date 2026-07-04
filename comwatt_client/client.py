@@ -67,6 +67,14 @@ class ComwattClient:
         if not self.session.cookies.get("cwt_session"):
             raise ComwattAuthError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
 
+    def _request(self, method, path, **kwargs):
+        url = f'{self.base_url}{path}'
+        response = self.session.request(method, url, timeout=self.timeout, **kwargs)
+        if response.status_code == 200:
+            return response
+        else:
+            raise _api_error(response)
+
     def is_authenticated(self):
         """
         Checks whether the current session cookie is still accepted by the API.
@@ -108,13 +116,7 @@ class ComwattClient:
 
         """
 
-        url = f'{self.base_url}/users/authenticated'
-
-        response = self.session.get(url, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("GET", "/users/authenticated").json()
 
     def get_sites(self):
         """
@@ -131,13 +133,7 @@ class ComwattClient:
 
         """
 
-        url = f'{self.base_url}/sites'
-
-        response = self.session.get(url, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("GET", "/sites").json()
 
 
     def get_site_networks_ts_time_ago(self, site_id,
@@ -165,7 +161,7 @@ class ComwattClient:
 
         """
 
-        url = (f'{self.base_url}/aggregations/site-networks-ts-time-ago?'
+        path = (f'/aggregations/site-networks-ts-time-ago?'
                f'siteId={site_id}&'
                f'measureKind={measure_kind}&'
                f'aggregationLevel={aggregation_level}&'
@@ -173,13 +169,9 @@ class ComwattClient:
                f'timeAgoValue={time_ago_value}')
 
         if aggregation_type != None:
-            url += f'&aggregationType={aggregation_type}'
+            path += f'&aggregationType={aggregation_type}'
 
-        response = self.session.get(url, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("GET", path).json()
 
     def get_site_consumption_breakdown_time_ago(self, site_id,
             aggregation_level = "HOUR",
@@ -202,17 +194,13 @@ class ComwattClient:
 
         """
 
-        url = (f'{self.base_url}/aggregations/consumption-breakdown-time-ago?'
+        path = (f'/aggregations/consumption-breakdown-time-ago?'
                 f'siteId={site_id}&'
                 f'aggregationLevel={aggregation_level}&'
                 f'timeAgoUnit={time_ago_unit}&'
                 f'timeAgoValue={time_ago_value}')
 
-        response = self.session.get(url, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("GET", path).json()
 
     def get_devices(self, site_id):
         """
@@ -229,13 +217,7 @@ class ComwattClient:
 
         """
 
-        url = f'{self.base_url}/devices?siteId={site_id}'
-
-        response = self.session.get(url, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("GET", f"/devices?siteId={site_id}").json()
 
     def get_device(self, device_id):
         """
@@ -248,13 +230,7 @@ class ComwattClient:
             dict: A dictionary containing the device information.
 
         """
-        url = f'{self.base_url}/devices/{device_id}'
-
-        response = self.session.get(url, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("GET", f"/devices/{device_id}").json()
 
     def put_device(self, device_id, payload):
         """
@@ -268,13 +244,7 @@ class ComwattClient:
             dict: A dictionary containing the response from the API.
 
         """
-        url = f'{self.base_url}/devices/{device_id}'
-
-        response = self.session.put(url, json=payload, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("PUT", f"/devices/{device_id}", json=payload).json()
 
 
     def get_device_ts_time_ago(self, device_id,
@@ -302,7 +272,7 @@ class ComwattClient:
 
         """
 
-        url = (f'{self.base_url}/aggregations/time-series?'
+        path = (f'/aggregations/time-series?'
                f'id={device_id}&'
                f'measureKind={measure_kind}&'
                f'aggregationLevel={aggregation_level}&'
@@ -310,11 +280,7 @@ class ComwattClient:
                f'timeAgoUnit={time_ago_unit}&'
                f'timeAgoValue={time_ago_value}')
 
-        response = self.session.get(url, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("GET", path).json()
 
     def switch_capacity(self, capacity_id, enable):
         """
@@ -328,10 +294,4 @@ class ComwattClient:
             dict: A dictionary containing the response from the API.
 
         """
-        url = f'{self.base_url}/capacities/{capacity_id}/switch?enable={str(enable).lower()}'
-
-        response = self.session.put(url, timeout=self.timeout)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise _api_error(response)
+        return self._request("PUT", f"/capacities/{capacity_id}/switch?enable={str(enable).lower()}").json()
