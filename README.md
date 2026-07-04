@@ -29,7 +29,7 @@ pip install comwatt-client
 Here's a simple example of how to use the Comwatt Python Client:
 
 ```python
-from comwatt.client import ComwattClient
+from comwatt_client import ComwattClient
 
 # Create a Comwatt client instance
 client = ComwattClient()
