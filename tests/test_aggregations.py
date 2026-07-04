@@ -433,3 +433,148 @@ def test_get_device_ts_time_ago_error(client):
         client.get_device_ts_time_ago("device-1")
 
     assert "500" in str(exc_info.value)
+
+
+@responses.activate
+def test_get_site_time_series_defaults(client):
+    mock_data = {"series": [1, 2, 3]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_time_series("site-1")
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    parsed = urlparse(request.url)
+    assert parsed.path == "/api/aggregations/site-time-series"
+    qs = parse_qs(parsed.query)
+    assert qs["id"] == ["site-1"]
+    assert qs["measureKind"] == ["FLOW"]
+    assert qs["aggregationLevel"] == ["HOUR"]
+    assert qs["timeAgoUnit"] == ["DAY"]
+    assert qs["timeAgoValue"] == ["1"]
+    assert "aggregationType" not in qs
+
+
+@responses.activate
+def test_get_site_time_series_with_aggregation_type(client):
+    mock_data = {"series": [4, 5, 6]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_time_series("site-1", aggregation_type="SUM")
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["aggregationType"] == ["SUM"]
+
+
+@responses.activate
+def test_get_site_time_series_custom_params(client):
+    mock_data = {"series": [7, 8, 9]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_time_series(
+        "site-1",
+        measure_kind="VIRTUAL_QUANTITY",
+        aggregation_level="DAY",
+        time_ago_unit="MONTH",
+        time_ago_value=3,
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["measureKind"] == ["VIRTUAL_QUANTITY"]
+    assert qs["aggregationLevel"] == ["DAY"]
+    assert qs["timeAgoUnit"] == ["MONTH"]
+    assert qs["timeAgoValue"] == ["3"]
+
+
+@responses.activate
+def test_get_site_time_series_with_naive_start(client):
+    mock_data = {"series": [1]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_time_series(
+        "site-1", start=datetime(2026, 7, 4, 10, 0, 0)
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T10:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+    assert "end" not in qs
+
+
+@responses.activate
+def test_get_site_time_series_with_start_and_end(client):
+    mock_data = {"series": [2]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_site_time_series(
+        "site-1",
+        start=datetime(2026, 7, 4, 0, 0, 0),
+        end=datetime(2026, 7, 5, 0, 0, 0),
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T00:00:00Z"]
+    assert qs["end"] == ["2026-07-05T00:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+
+
+@responses.activate
+def test_get_site_time_series_end_without_start_raises(client):
+    with pytest.raises(ValueError):
+        client.get_site_time_series("site-1", end=datetime(2026, 7, 4, 10, 0, 0))
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_get_site_time_series_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_site_time_series("site-1")
+
+    assert "500" in str(exc_info.value)
