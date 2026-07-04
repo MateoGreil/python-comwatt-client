@@ -64,6 +64,35 @@ class ComwattClient:
             detail = _response_detail(response)
             raise ComwattAuthError(status_code=response.status_code, url=response.url, detail=detail, response=response)
 
+        if not self.session.cookies.get("cwt_session"):
+            raise ComwattAuthError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
+
+    def is_authenticated(self):
+        """
+        Checks whether the current session cookie is still accepted by the API.
+
+        Args:
+            None
+
+        Returns:
+            bool: True if the session is authenticated, False if the API
+                rejected it (401/403).
+
+        Raises:
+            Exception: If an unexpected error occurs while probing the API.
+
+        """
+
+        url = f'{self.base_url}/users/authenticated'
+
+        response = self.session.get(url, timeout=self.timeout)
+        if response.status_code == 200:
+            return True
+        elif response.status_code in (401, 403):
+            return False
+        else:
+            raise _api_error(response)
+
     def get_authenticated_user(self):
         """
         Retrieves information about the authenticated user.

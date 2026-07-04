@@ -9,6 +9,7 @@ Please note that the Comwatt client is exclusively for gen4 devices: it use `ene
 The client currently supports the following methods:
 
 - `authenticate(self, username, password)`: Authenticates a user with the provided username and password.
+- `is_authenticated(self)`: Returns whether the current session is still valid (probes the API; `True`/`False`, re-raises unexpected errors).
 - `get_authenticated_user(self)`: Retrieves information about the authenticated user.
 - `get_sites(self)`: Retrieves a list of sites associated with the authenticated user.
 - `get_site_networks_ts_time_ago(self, site_id, measure_kind = "FLOW", aggregation_level = "NONE", aggregation_type = None, time_ago_unit = "HOUR", time_ago_value = 1)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters.
