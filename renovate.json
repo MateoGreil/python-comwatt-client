@@ -4,5 +4,17 @@
     "config:recommended"
   ],
   "osvVulnerabilityAlerts": true,
-  "dependencyDashboardOSVVulnerabilitySummary": "unresolved"
+  "dependencyDashboardOSVVulnerabilitySummary": "unresolved",
+  "semanticCommits": "disabled",
+  "commitMessageLowerCase": "never",
+  "commitMessagePrefix": "⬆️",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["pin", "pinDigest"],
+      "commitMessagePrefix": "📌"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "commitMessagePrefix": "🔒️"
+  }
 }
