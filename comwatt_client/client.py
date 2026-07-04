@@ -279,7 +279,7 @@ class ComwattClient:
             dict: A dictionary containing the response from the API.
 
         """
-        url = f'{self.base_url}/capacities/{capacity_id}/switch?enable={enable}'
+        url = f'{self.base_url}/capacities/{capacity_id}/switch?enable={str(enable).lower()}'
 
         response = self.session.put(url, timeout=self.timeout)
         if response.status_code == 200:
