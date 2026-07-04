@@ -186,7 +186,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving sites: {response.status_code}')
+            raise Exception(f'Error retrieving devices: {response.status_code}')
 
     def get_device(self, device_id):
         """
@@ -225,7 +225,7 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving sites: {response.status_code}')
+            raise Exception(f'Error updating device {device_id}: {response.status_code}')
 
 
     def get_device_ts_time_ago(self, device_id,
@@ -285,4 +285,4 @@ class ComwattClient:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f'Error retrieving sites: {response.status_code}')
+            raise Exception(f'Error switching capacity {capacity_id}: {response.status_code}')
