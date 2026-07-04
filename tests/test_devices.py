@@ -131,7 +131,7 @@ def test_switch_capacity_success_enable_true(client):
     parsed = urlparse(request.url)
     assert parsed.path == "/api/capacities/capacity-1/switch"
     qs = parse_qs(parsed.query)
-    assert qs["enable"] == ["True"]
+    assert qs["enable"] == ["true"]
 
 
 @responses.activate
@@ -152,7 +152,7 @@ def test_switch_capacity_success_enable_false(client):
     parsed = urlparse(request.url)
     assert parsed.path == "/api/capacities/capacity-1/switch"
     qs = parse_qs(parsed.query)
-    assert qs["enable"] == ["False"]
+    assert qs["enable"] == ["false"]
 
 
 @responses.activate
