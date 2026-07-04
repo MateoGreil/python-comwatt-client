@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comwatt-client"
+version = "0.2.3"
+description = "Python Client for Comwatt API"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Matéo Greil", email = "contact@greil.fr" },
+]
+dependencies = [
+    "requests>=2.32.4",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/MateoGreil/python-comwatt-client"
+
+[tool.setuptools.packages.find]
+include = ["comwatt_client*"]

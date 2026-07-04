@@ -1,0 +1,24 @@
+name: Renovate
+
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/renovate/renovate:43
+    steps:
+      - name: Run Renovate
+        run: renovate
+        env:
+          LOG_LEVEL: debug
+          RENOVATE_PLATFORM: forgejo
+          RENOVATE_ENDPOINT: https://git.greil.fr/
+          RENOVATE_AUTODISCOVER: 'false'
+          RENOVATE_REPOSITORIES: mat/python-comwatt-client
+          RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          RENOVATE_GITHUB_COM_TOKEN: ${{ secrets.RENOVATE_GH_COM_TOKEN }}
+          RENOVATE_GIT_AUTHOR: 'Renovate Bot <renovate-bot@git.greil.fr>'
