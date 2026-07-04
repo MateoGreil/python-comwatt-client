@@ -1,0 +1,26 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  forgejo-pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: https://data.forgejo.org/actions/checkout@v4
+
+      - name: Set up Python virtualenv
+        run: |
+          apt-get update
+          apt-get install -y python3-venv
+          python3 -m venv .venv
+
+      - name: Install dependencies
+        run: |
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.txt -r requirements-dev.txt
+          .venv/bin/python -m pip install -e .
+
+      - name: Run tests
+        run: .venv/bin/python -m pytest
