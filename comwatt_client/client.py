@@ -102,10 +102,10 @@ class ComwattClient:
 
         Args:
             site_id (str): The ID of the site.
-            measure_kind (str): The kind of measure (default: "VIRTUAL_QUANTITY").
-            aggregation_level (str): The aggregation level (default: "HOUR").
+            measure_kind (str): The kind of measure (default: "FLOW").
+            aggregation_level (str): The aggregation level (default: "NONE").
             aggregation_type (str): The aggregation type (default: None, can be : None, "SUM", "MAX").
-            time_ago_unit (str): The unit of time ago (default: "DAY").
+            time_ago_unit (str): The unit of time ago (default: "HOUR").
             time_ago_value (int): The value of time ago (default: 1).
 
         Returns:

@@ -11,7 +11,7 @@ The client currently supports the following methods:
 - `authenticate(self, username, password)`: Authenticates a user with the provided username and password.
 - `get_authenticated_user(self)`: Retrieves information about the authenticated user.
 - `get_sites(self)`: Retrieves a list of sites associated with the authenticated user.
-- `get_site_networks_ts_time_ago(self, site_id, measure_kind = "VIRTUAL_QUANTITY", aggregation_level = "HOUR", aggregation_type = "SUM", time_ago_unit = "DAY", time_ago_value = 1)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters.
+- `get_site_networks_ts_time_ago(self, site_id, measure_kind = "FLOW", aggregation_level = "NONE", aggregation_type = None, time_ago_unit = "HOUR", time_ago_value = 1)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters.
 - `get_site_consumption_breakdown_time_ago(self, site_id, aggregation_level = "HOUR", time_ago_unit = "DAY", time_ago_value = 1)` Retrieves the consumption breakdown data for a specific site, based on the provided parameters.
 - `get_devices(self, site_id)`: Retrieves a list of devices for the specified site.
 - `get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1")`: Retrieves the time series data for a specific device, based on the provided parameters.
