@@ -432,6 +432,23 @@ class ComwattClient:
         """
         return self._request("GET", f"/tiles?siteId={site_id}").json()
 
+    def get_electricity_price(self, site_id: int | str) -> dict[str, Any]:
+        """
+        Retrieves the EDF Tempo calendar / tariff structure for the specified site.
+
+        Args:
+            site_id (str): The ID of the site.
+
+        Returns:
+            dict: The Tempo tariff structure (`tempoSyntheses`, `daily`,
+                `tempoSynthesesComplete`).
+
+        Raises:
+            Exception: If an error occurs while retrieving the electricity price.
+
+        """
+        return self._request("GET", f"/electricityprice?siteId={site_id}").json()
+
     def get_device_ts_time_ago(self, device_id: int | str,
             measure_kind: str = "FLOW",
             aggregation_level: str = "HOUR",

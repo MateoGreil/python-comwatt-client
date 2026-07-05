@@ -19,6 +19,7 @@ The client currently supports the following methods:
 - `get_connected_object(self, connected_object_id)`: Retrieves information about a specific connected object.
 - `get_measure_keys(self, site_id)`: Retrieves the measure keys (flat measurement inventory) for a site — each a `(device, measureKind)` pair with a stable id and `measureKey` UUID.
 - `get_tiles(self, site_id)`: Retrieves the dashboard tile configuration for a site (tile type + which device each points at; configuration only, no live values).
+- `get_electricity_price(self, site_id)`: Retrieves the EDF Tempo calendar / tariff structure for a site (`tempoSyntheses`, `daily`, ...).
 - `get_device_kinds(self, site_uid)`: Retrieves the device-kind catalogue for a site (the "add a device" picker). Takes the short `siteUid` string (from `site["siteUid"]`), not the numeric site id.
 - `get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1", start = None, end = None)`: Retrieves the time series data for a specific device, based on the provided parameters.
 - `get_site_time_series(self, site_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = None, time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)`: Retrieves the whole-site rollup time series data for a specific site, based on the provided parameters.
