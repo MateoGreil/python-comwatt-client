@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,6 +7,8 @@ name = "comwatt-client"
 version = "0.3.2"
 description = "Python Client for Comwatt API"
 readme = "README.md"
+license = "MIT-0"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
     { name = "Matéo Greil", email = "contact@greil.fr" },
