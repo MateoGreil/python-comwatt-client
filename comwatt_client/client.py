@@ -377,6 +377,25 @@ class ComwattClient:
         """
         return self._request("GET", f"/connectedobjects/{connected_object_id}").json()
 
+    def get_device_kinds(self, site_uid: str) -> list[dict[str, Any]]:
+        """
+        Retrieves the catalogue of device kinds available for a site (the
+        "add a device" picker), with codes such as "SOLAR_PANEL", "GRID_METER"
+        or "PRO_HEAT_PUMP".
+
+        Args:
+            site_uid (str): The short `siteUid` string of the site (e.g. "992179e1",
+                found as `site["siteUid"]` in `get_sites()` output), NOT the numeric site id.
+
+        Returns:
+            list: A list of device-kind catalogue objects.
+
+        Raises:
+            Exception: If an error occurs while retrieving the device kinds.
+
+        """
+        return self._request("GET", f"/devicekinds/by-site-uid/{site_uid}").json()
+
     def get_measure_keys(self, site_id: int | str) -> list[dict[str, Any]]:
         """
         Retrieves the measure keys (measurement inventory) for the specified site.
