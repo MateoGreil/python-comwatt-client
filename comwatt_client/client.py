@@ -418,6 +418,44 @@ class ComwattClient:
 
         return self._request("GET", "/aggregations/site-time-series", params=params).json()
 
+    def get_top_consumption(self, site_id: int | str,
+            aggregation_level: str = "DAY",
+            time_ago_unit: str = "DAY",
+            time_ago_value: int | str = 1,
+            start: datetime | str | None = None,
+            end: datetime | str | None = None) -> dict[str, Any]:
+        """
+        Retrieves the per-device consumption breakdown for a specific site, based on the provided parameters.
+
+        Args:
+            site_id (str): The ID of the site.
+            aggregation_level (str): The aggregation level (default: "DAY").
+            time_ago_unit (str): The unit of time ago (default: "DAY").
+            time_ago_value (int): The value of time ago (default: 1).
+            start (datetime | str): The start of an absolute time window (default: None).
+                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
+                When provided, the relative `time_ago_unit`/`time_ago_value` parameters are ignored.
+            end (datetime | str): The end of an absolute time window (default: None).
+                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
+                Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
+
+        Returns:
+            dict: The per-device consumption breakdown (top 5 devices by percentage plus an "others" bucket).
+
+        Raises:
+            ValueError: If `end` is given without `start`.
+            Exception: If an error occurs while retrieving the data.
+
+        """
+
+        params = _aggregations_query(
+            id_param="id", id_value=site_id, aggregation_level=aggregation_level,
+            time_ago_unit=time_ago_unit, time_ago_value=time_ago_value,
+            start=start, end=end,
+        )
+
+        return self._request("GET", "/aggregations/top-consumption", params=params).json()
+
     def switch_capacity(self, capacity_id: int | str, enable: bool) -> dict[str, Any]:
         """
         Switch a specific capcaity to the enable value.

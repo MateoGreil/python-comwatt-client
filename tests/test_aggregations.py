@@ -578,3 +578,127 @@ def test_get_site_time_series_error(client):
         client.get_site_time_series("site-1")
 
     assert "500" in str(exc_info.value)
+
+
+@responses.activate
+def test_get_top_consumption_defaults(client):
+    mock_data = {"elements": [{"label": "Fridge", "percentageValue": 34}]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/top-consumption",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_top_consumption("site-1")
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    parsed = urlparse(request.url)
+    assert parsed.path == "/api/aggregations/top-consumption"
+    qs = parse_qs(parsed.query)
+    assert qs["id"] == ["site-1"]
+    assert qs["aggregationLevel"] == ["DAY"]
+    assert qs["timeAgoUnit"] == ["DAY"]
+    assert qs["timeAgoValue"] == ["1"]
+    assert "measureKind" not in qs
+    assert "aggregationType" not in qs
+
+
+@responses.activate
+def test_get_top_consumption_custom_params(client):
+    mock_data = {"elements": [{"label": "Others", "percentageValue": 12}]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/top-consumption",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_top_consumption(
+        "site-1",
+        aggregation_level="WEEK",
+        time_ago_unit="MONTH",
+        time_ago_value=3,
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["aggregationLevel"] == ["WEEK"]
+    assert qs["timeAgoUnit"] == ["MONTH"]
+    assert qs["timeAgoValue"] == ["3"]
+
+
+@responses.activate
+def test_get_top_consumption_with_naive_start(client):
+    mock_data = {"elements": [{"label": "Oven", "percentageValue": 20}]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/top-consumption",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_top_consumption(
+        "site-1", start=datetime(2026, 7, 4, 10, 0, 0)
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T10:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+    assert "end" not in qs
+
+
+@responses.activate
+def test_get_top_consumption_with_start_and_end(client):
+    mock_data = {"elements": [{"label": "Heater", "percentageValue": 40}]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/top-consumption",
+        json=mock_data,
+        status=200,
+    )
+
+    result = client.get_top_consumption(
+        "site-1",
+        start=datetime(2026, 7, 4, 0, 0, 0),
+        end=datetime(2026, 7, 5, 0, 0, 0),
+    )
+
+    assert result == mock_data
+    request = responses.calls[0].request
+    parsed = urlparse(request.url)
+    qs = parse_qs(parsed.query)
+    assert qs["start"] == ["2026-07-04T00:00:00Z"]
+    assert qs["end"] == ["2026-07-05T00:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+
+
+@responses.activate
+def test_get_top_consumption_end_without_start_raises(client):
+    with pytest.raises(ValueError):
+        client.get_top_consumption("site-1", end=datetime(2026, 7, 4, 10, 0, 0))
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_get_top_consumption_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/top-consumption",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_top_consumption("site-1")
+
+    assert "500" in str(exc_info.value)
