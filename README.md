@@ -17,6 +17,7 @@ The client currently supports the following methods:
 - `get_devices(self, site_id)`: Retrieves a list of devices for the specified site.
 - `get_connected_objects(self, site_id=None, gateway_uid=None)`: Retrieves the connected objects for a site or a gateway. Exactly one of `site_id` / `gateway_uid` is required (raises `ValueError` otherwise).
 - `get_connected_object(self, connected_object_id)`: Retrieves information about a specific connected object.
+- `get_measure_keys(self, site_id)`: Retrieves the measure keys (flat measurement inventory) for a site — each a `(device, measureKind)` pair with a stable id and `measureKey` UUID.
 - `get_device_ts_time_ago(self, device_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = "MAX", time_ago_unit = "DAY", time_ago_value = "1", start = None, end = None)`: Retrieves the time series data for a specific device, based on the provided parameters.
 - `get_site_time_series(self, site_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = None, time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)`: Retrieves the whole-site rollup time series data for a specific site, based on the provided parameters.
 - `get_top_consumption(self, site_id, aggregation_level = "DAY", time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)`: Retrieves the per-device consumption breakdown (top 5 devices + "others") for a specific site.
