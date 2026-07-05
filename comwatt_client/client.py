@@ -557,6 +557,24 @@ class ComwattClient:
 
         return self._request("GET", "/aggregations/top-consumption", params=params).json()
 
+    def get_ecowatt(self) -> list[dict[str, Any]]:
+        """
+        Retrieves the RTE EcoWatt grid-stress forecast.
+
+        Args:
+            None
+
+        Returns:
+            list: A list of daily entries, each with a GREEN/ORANGE/RED status
+                and a 24-entry hourly forecast.
+
+        Raises:
+            Exception: If an error occurs while retrieving the forecast.
+
+        """
+
+        return self._request("GET", "/ecowatt").json()
+
     def switch_capacity(self, capacity_id: int | str, enable: bool) -> dict[str, Any]:
         """
         Switch a specific capcaity to the enable value.
