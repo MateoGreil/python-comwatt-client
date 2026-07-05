@@ -40,7 +40,7 @@ hashlib.sha256(f"jbjaonfusor_{password}_4acuttbuik9".encode()).hexdigest()
 ```
 
 Hard-coded prefix/suffix come from the SPA bundle (and are also already used
-by `comwatt_client/client.py`).
+by `comwatt_client/_auth.py`).
 
 Response:
 
