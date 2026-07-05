@@ -22,9 +22,10 @@ class ComwattError(Exception):
 
 
 class ComwattAuthError(ComwattError):
-    """The session is invalid or login failed (HTTP 401, or a failed authenticate()).
-    Callers should re-authenticate."""
+    """The credentials were rejected (HTTP 401/403 on login) or the session
+    is invalid (HTTP 401). Callers should re-authenticate."""
 
 
 class ComwattAPIError(ComwattError):
-    """Any other unexpected HTTP status from the Comwatt API."""
+    """Any other unexpected HTTP status from the Comwatt API, including
+    non-credential failures on authentication."""

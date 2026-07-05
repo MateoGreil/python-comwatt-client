@@ -42,7 +42,7 @@ def test_authenticate_missing_cookie(client):
         status=200,
     )
 
-    with pytest.raises(ComwattAuthError) as exc_info:
+    with pytest.raises(ComwattAPIError) as exc_info:
         client.authenticate("testuser", "testpass")
 
     assert "cwt_session" in str(exc_info.value)
@@ -61,6 +61,36 @@ def test_authenticate_error(client):
         client.authenticate("testuser", "testpass")
 
     assert "401" in str(exc_info.value)
+
+
+@responses.activate
+def test_authenticate_error_403(client):
+    responses.add(
+        responses.POST,
+        f"{BASE_URL}/v1/authent",
+        json={},
+        status=403,
+    )
+
+    with pytest.raises(ComwattAuthError) as exc_info:
+        client.authenticate("testuser", "testpass")
+
+    assert exc_info.value.status_code == 403
+
+
+@responses.activate
+def test_authenticate_server_error_is_not_auth_error(client):
+    responses.add(
+        responses.POST,
+        f"{BASE_URL}/v1/authent",
+        json={},
+        status=503,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.authenticate("testuser", "testpass")
+
+    assert exc_info.value.status_code == 503
 
 
 @responses.activate

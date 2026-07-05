@@ -22,7 +22,9 @@ class AuthMixin(_BaseClient):
             None
 
         Raises:
-            Exception: If the authentication fails.
+            ComwattAuthError: If the credentials are rejected (HTTP 401/403).
+            ComwattAPIError: If the API responds with any other unexpected
+                status, or with HTTP 200 but no session cookie.
 
         """
 

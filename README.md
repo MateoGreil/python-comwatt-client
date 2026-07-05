@@ -105,8 +105,8 @@ Make sure to replace `'username'`, `'password'` with the actual values for your 
 
 All errors raised by the client subclass `ComwattError`:
 
-- `ComwattAuthError` — login failed or the session expired (HTTP 401). Re-authenticate.
-- `ComwattAPIError` — any other unexpected HTTP status. Exposes `.status_code`, `.url`, `.detail`.
+- `ComwattAuthError` — the credentials were rejected (HTTP 401/403 on login) or the session expired (HTTP 401). Re-authenticate.
+- `ComwattAPIError` — any other unexpected HTTP status, including non-credential failures of `authenticate()` (e.g. a 5xx during an outage, or a 200 response missing the session cookie). Exposes `.status_code`, `.url`, `.detail`.
 
 ```python
 from comwatt_client import ComwattClient, ComwattAuthError, ComwattAPIError

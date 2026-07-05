@@ -44,10 +44,11 @@ class _BaseClient:
 
         if response.status_code != 200:
             detail = _response_detail(response)
-            raise ComwattAuthError(status_code=response.status_code, url=response.url, detail=detail, response=response)
+            exc_cls = ComwattAuthError if response.status_code in (401, 403) else ComwattAPIError
+            raise exc_cls(status_code=response.status_code, url=response.url, detail=detail, response=response)
 
         if not self.session.cookies.get("cwt_session"):
-            raise ComwattAuthError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
+            raise ComwattAPIError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
 
     def _reauthenticate(self) -> None:
         if self._username and self._auth_hash:
