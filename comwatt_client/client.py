@@ -361,6 +361,21 @@ class ComwattClient:
 
         return self._request("GET", path).json()
 
+    def get_connected_object(self, connected_object_id: int | str) -> dict[str, Any]:
+        """
+        Retrieves information about a specific connected object.
+
+        Args:
+            connected_object_id (str): The ID of the connected object.
+
+        Returns:
+            dict: A dictionary containing the connected object information.
+
+        Raises:
+            Exception: If an error occurs while retrieving the connected object.
+
+        """
+        return self._request("GET", f"/connectedobjects/{connected_object_id}").json()
 
     def get_device_ts_time_ago(self, device_id: int | str,
             measure_kind: str = "FLOW",

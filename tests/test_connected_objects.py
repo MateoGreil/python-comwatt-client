@@ -74,3 +74,37 @@ def test_get_connected_objects_requires_a_filter(client):
 def test_get_connected_objects_rejects_both_filters(client):
     with pytest.raises(ValueError):
         client.get_connected_objects(site_id="site-1", gateway_uid="GW-1")
+
+
+@responses.activate
+def test_get_connected_object_success(client):
+    mock_object = {"id": "co-1", "name": "Object One"}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/connectedobjects/co-1",
+        json=mock_object,
+        status=200,
+    )
+
+    result = client.get_connected_object("co-1")
+
+    assert result == mock_object
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    parsed = urlparse(request.url)
+    assert parsed.path == "/api/connectedobjects/co-1"
+
+
+@responses.activate
+def test_get_connected_object_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/connectedobjects/co-1",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_connected_object("co-1")
+
+    assert "500" in str(exc_info.value)
