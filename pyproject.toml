@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comwatt-client"
-version = "0.3.0"
+version = "0.3.1"
 description = "Python Client for Comwatt API"
 readme = "README.md"
 requires-python = ">=3.10"
