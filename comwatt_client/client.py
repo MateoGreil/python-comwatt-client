@@ -394,6 +394,25 @@ class ComwattClient:
         """
         return self._request("GET", f"/measurekeys/measurekeys?siteId={site_id}").json()
 
+    def get_tiles(self, site_id: int | str) -> list[dict[str, Any]]:
+        """
+        Retrieves the dashboard tile configuration for the specified site.
+
+        This is configuration only (which tile of which type points at which
+        device: `REAL_TIME` / `VALUATION` / `THIRD_PARTY`), not live measurement values.
+
+        Args:
+            site_id (str): The ID of the site.
+
+        Returns:
+            list: A list of tile configuration objects.
+
+        Raises:
+            Exception: If an error occurs while retrieving the tiles.
+
+        """
+        return self._request("GET", f"/tiles?siteId={site_id}").json()
+
     def get_device_ts_time_ago(self, device_id: int | str,
             measure_kind: str = "FLOW",
             aggregation_level: str = "HOUR",
