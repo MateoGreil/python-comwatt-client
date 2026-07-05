@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comwatt-client"
-version = "0.3.2"
+dynamic = ["version"]
 description = "Python Client for Comwatt API"
 readme = "README.md"
 license = "MIT-0"
@@ -29,6 +29,9 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/MateoGreil/python-comwatt-client"
+
+[tool.setuptools.dynamic]
+version = { attr = "comwatt_client.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["comwatt_client*"]
