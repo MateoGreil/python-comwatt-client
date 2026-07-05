@@ -57,3 +57,36 @@ class AuthMixin(_BaseClient):
             return False
         else:
             raise _api_error(response)
+
+    def logout(self) -> None:
+        """
+        Logs the current session out on the server.
+
+        Issues ``POST /v1/logout``, which invalidates the ``cwt_session``
+        cookie server-side (the server also expires it client-side via a
+        ``Set-Cookie`` header). Stored credentials are then cleared so that
+        an expired session is not silently re-established by ``auto_reauth``
+        on the next request.
+
+        Idempotent: if the session is already logged out (the API answers
+        401), this is treated as a successful no-op.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        Raises:
+            ComwattAPIError: If the API returns an unexpected error status.
+
+        """
+
+        url = f'{self.base_url}/v1/logout'
+
+        response = self.session.post(url, timeout=self.timeout)
+        if response.status_code not in (200, 401):
+            raise _api_error(response)
+
+        self._username = None
+        self._auth_hash = None

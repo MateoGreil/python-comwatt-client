@@ -10,6 +10,7 @@ The client currently supports the following methods:
 
 - `authenticate(self, username, password)`: Authenticates a user with the provided username and password. The client re-authenticates automatically on session expiry (HTTP 401) and retries the request once; pass `ComwattClient(auto_reauth=False)` to disable this.
 - `is_authenticated(self)`: Returns whether the current session is still valid (probes the API; `True`/`False`, re-raises unexpected errors).
+- `logout(self)`: Logs the current session out server-side (`POST /v1/logout`) and clears the stored credentials so `auto_reauth` cannot silently restore the session. Idempotent (a 401 when already logged out is a no-op). Note this is distinct from `close()`, which only releases the local HTTP session without logging out.
 - `get_authenticated_user(self)`: Retrieves information about the authenticated user.
 - `get_sites(self)`: Retrieves a list of sites associated with the authenticated user.
 - `get_site_networks_ts_time_ago(self, site_id, measure_kind = "FLOW", aggregation_level = "NONE", aggregation_type = None, time_ago_unit = "HOUR", time_ago_value = 1, start = None, end = None)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters.

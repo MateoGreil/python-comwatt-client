@@ -116,3 +116,72 @@ def test_is_authenticated_raises_on_other_error(client):
 
     with pytest.raises(ComwattAPIError):
         client.is_authenticated()
+
+
+def _add_authent():
+    responses.add(
+        responses.POST,
+        f"{BASE_URL}/v1/authent",
+        json={},
+        status=200,
+        headers={"Set-Cookie": "cwt_session=fake-session-token; Path=/"},
+    )
+
+
+@responses.activate
+def test_logout_success(client):
+    _add_authent()
+    responses.add(responses.POST, f"{BASE_URL}/v1/logout", status=200)
+    client.authenticate("testuser", "testpass")
+
+    result = client.logout()
+
+    assert result is None
+    logout_call = responses.calls[-1].request
+    assert logout_call.method == "POST"
+    assert logout_call.url == f"{BASE_URL}/v1/logout"
+    assert client._username is None
+    assert client._auth_hash is None
+
+
+@responses.activate
+def test_logout_idempotent_when_already_logged_out(client):
+    responses.add(responses.POST, f"{BASE_URL}/v1/logout", status=401)
+
+    result = client.logout()
+
+    assert result is None
+    assert client._username is None
+    assert client._auth_hash is None
+
+
+@responses.activate
+def test_logout_prevents_auto_reauth(client):
+    _add_authent()
+    responses.add(responses.POST, f"{BASE_URL}/v1/logout", status=200)
+    responses.add(responses.GET, f"{BASE_URL}/sites", json={}, status=401)
+    client.authenticate("testuser", "testpass")
+
+    client.logout()
+
+    with pytest.raises(ComwattAuthError):
+        client.get_sites()
+
+    authent_calls = [
+        call for call in responses.calls
+        if call.request.url == f"{BASE_URL}/v1/authent"
+    ]
+    assert len(authent_calls) == 1
+
+
+@responses.activate
+def test_logout_keeps_credentials_on_unexpected_error(client):
+    _add_authent()
+    responses.add(responses.POST, f"{BASE_URL}/v1/logout", status=500)
+    client.authenticate("testuser", "testpass")
+
+    with pytest.raises(ComwattAPIError):
+        client.logout()
+
+    assert client._username == "testuser"
+    assert client._auth_hash is not None
