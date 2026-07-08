@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from datetime import datetime, timezone
 from typing import Any
 
@@ -76,7 +77,20 @@ class AggregationsMixin(_BaseClient):
             ValueError: If `end` is given without `start`.
             Exception: If an error occurs while retrieving the data.
 
+        .. deprecated::
+            Use :meth:`get_site_time_series` instead. The
+            ``site-networks-ts-time-ago`` endpoint still responds, but the app
+            has moved to ``site-time-series``; this alias is kept only for
+            backward compatibility.
+
         """
+
+        warnings.warn(
+            "get_site_networks_ts_time_ago() is deprecated and will be removed in a "
+            "future release; use get_site_time_series() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         params = _aggregations_query(
             id_param="siteId", id_value=site_id, aggregation_level=aggregation_level,
@@ -115,7 +129,20 @@ class AggregationsMixin(_BaseClient):
             ValueError: If `end` is given without `start`.
             Exception: If an error occurs while retrieving the data.
 
+        .. deprecated::
+            Use :meth:`get_top_consumption` instead. The
+            ``consumption-breakdown-time-ago`` endpoint still responds, but the
+            app has moved to ``top-consumption``; this alias is kept only for
+            backward compatibility.
+
         """
+
+        warnings.warn(
+            "get_site_consumption_breakdown_time_ago() is deprecated and will be "
+            "removed in a future release; use get_top_consumption() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         params = _aggregations_query(
             id_param="siteId", id_value=site_id, aggregation_level=aggregation_level,

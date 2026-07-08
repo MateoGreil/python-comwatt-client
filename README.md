@@ -13,8 +13,8 @@ The client currently supports the following methods:
 - `logout(self)`: Logs the current session out server-side (`POST /v1/logout`) and clears the stored credentials so `auto_reauth` cannot silently restore the session. Idempotent (a 401 when already logged out is a no-op). Note this is distinct from `close()`, which only releases the local HTTP session without logging out.
 - `get_authenticated_user(self)`: Retrieves information about the authenticated user.
 - `get_sites(self)`: Retrieves a list of sites associated with the authenticated user.
-- `get_site_networks_ts_time_ago(self, site_id, measure_kind = "FLOW", aggregation_level = "NONE", aggregation_type = None, time_ago_unit = "HOUR", time_ago_value = 1, start = None, end = None)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters.
-- `get_site_consumption_breakdown_time_ago(self, site_id, aggregation_level = "HOUR", time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)` Retrieves the consumption breakdown data for a specific site, based on the provided parameters.
+- `get_site_networks_ts_time_ago(self, site_id, measure_kind = "FLOW", aggregation_level = "NONE", aggregation_type = None, time_ago_unit = "HOUR", time_ago_value = 1, start = None, end = None)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters. **Deprecated** — use `get_site_time_series` instead (emits a `DeprecationWarning`; the endpoint still works but the app has moved to `site-time-series`).
+- `get_site_consumption_breakdown_time_ago(self, site_id, aggregation_level = "HOUR", time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)` Retrieves the consumption breakdown data for a specific site, based on the provided parameters. **Deprecated** — use `get_top_consumption` instead (emits a `DeprecationWarning`; the endpoint still works but the app has moved to `top-consumption`).
 - `get_devices(self, site_id)`: Retrieves a list of devices for the specified site.
 - `get_connected_objects(self, site_id=None, gateway_uid=None)`: Retrieves the connected objects for a site or a gateway. Exactly one of `site_id` / `gateway_uid` is required (raises `ValueError` otherwise).
 - `get_connected_object(self, connected_object_id)`: Retrieves information about a specific connected object.
@@ -68,13 +68,13 @@ print(user_info)
 sites = client.get_sites()
 print(sites)
 
-# Get time series data for the networks of a specific site
-networks_time_series_data = client.get_site_networks_ts_time_ago(sites[0]['id'])
-print(networks_time_series_data)
+# Get the whole-site rollup time series (productions, consumptions, injections, ...)
+site_time_series_data = client.get_site_time_series(sites[0]['id'])
+print(site_time_series_data)
 
-# Get the consumption breakdown data for a specific site, based on the provided parameters.
-consumption_breakdown_data = client.get_site_consumption_breakdown_time_ago(sites[0]['id'])
-print(consumption_breakdown_data)
+# Get the per-device consumption breakdown for a specific site (top 5 + "others")
+top_consumption_data = client.get_top_consumption(sites[0]['id'])
+print(top_consumption_data)
 
 # Get a list of devices for a specific site
 devices = client.get_devices(sites[0]['id'])

@@ -8,6 +8,7 @@ from comwatt_client import ComwattAPIError
 from tests.conftest import BASE_URL
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_defaults(client):
     mock_data = {"values": [1, 2, 3]}
@@ -34,6 +35,7 @@ def test_get_site_networks_ts_time_ago_defaults(client):
     assert "aggregationType" not in qs
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_with_aggregation_type(client):
     mock_data = {"values": [4, 5, 6]}
@@ -53,6 +55,7 @@ def test_get_site_networks_ts_time_ago_with_aggregation_type(client):
     assert qs["aggregationType"] == ["SUM"]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_custom_params(client):
     mock_data = {"values": [7, 8, 9]}
@@ -81,6 +84,7 @@ def test_get_site_networks_ts_time_ago_custom_params(client):
     assert qs["timeAgoValue"] == ["3"]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_error(client):
     responses.add(
@@ -96,6 +100,7 @@ def test_get_site_networks_ts_time_ago_error(client):
     assert "500" in str(exc_info.value)
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_consumption_breakdown_time_ago_defaults(client):
     mock_data = {"breakdown": "data"}
@@ -120,6 +125,7 @@ def test_get_site_consumption_breakdown_time_ago_defaults(client):
     assert qs["timeAgoValue"] == ["1"]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_consumption_breakdown_time_ago_custom_params(client):
     mock_data = {"breakdown": "custom"}
@@ -147,6 +153,7 @@ def test_get_site_consumption_breakdown_time_ago_custom_params(client):
     assert qs["timeAgoValue"] == ["2"]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_consumption_breakdown_time_ago_error(client):
     responses.add(
@@ -188,6 +195,7 @@ def test_get_device_ts_time_ago_defaults(client):
     assert qs["timeAgoValue"] == ["1"]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_with_naive_start(client):
     mock_data = {"values": [1]}
@@ -214,6 +222,7 @@ def test_get_site_networks_ts_time_ago_with_naive_start(client):
     assert qs["aggregationLevel"] == ["NONE"]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_with_start_and_end(client):
     mock_data = {"values": [2]}
@@ -240,6 +249,7 @@ def test_get_site_networks_ts_time_ago_with_start_and_end(client):
     assert "timeAgoValue" not in qs
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_with_aware_start(client):
     mock_data = {"values": [3]}
@@ -260,6 +270,7 @@ def test_get_site_networks_ts_time_ago_with_aware_start(client):
     assert qs["start"] == ["2026-07-04T10:00:00Z"]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_with_string_start(client):
     mock_data = {"values": [4]}
@@ -281,6 +292,7 @@ def test_get_site_networks_ts_time_ago_with_string_start(client):
     assert qs["start"] == ["2026-07-04T10:00:00Z"]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_networks_ts_time_ago_end_without_start_raises(client):
     with pytest.raises(ValueError):
@@ -290,6 +302,7 @@ def test_get_site_networks_ts_time_ago_end_without_start_raises(client):
     assert len(responses.calls) == 0
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_consumption_breakdown_time_ago_with_start_and_end(client):
     mock_data = {"breakdown": "windowed"}
@@ -316,6 +329,7 @@ def test_get_site_consumption_breakdown_time_ago_with_start_and_end(client):
     assert "timeAgoValue" not in qs
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @responses.activate
 def test_get_site_consumption_breakdown_time_ago_end_without_start_raises(client):
     with pytest.raises(ValueError):
@@ -702,3 +716,43 @@ def test_get_top_consumption_error(client):
         client.get_top_consumption("site-1")
 
     assert "500" in str(exc_info.value)
+
+
+@responses.activate
+def test_get_site_networks_ts_time_ago_is_deprecated(client):
+    mock_data = {"values": [1, 2, 3]}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-networks-ts-time-ago",
+        json=mock_data,
+        status=200,
+    )
+
+    with pytest.warns(DeprecationWarning, match="get_site_time_series") as record:
+        result = client.get_site_networks_ts_time_ago("site-1")
+
+    # Behaviour is unchanged: still returns the data and still hits the legacy endpoint.
+    assert result == mock_data
+    parsed = urlparse(responses.calls[0].request.url)
+    assert parsed.path == "/api/aggregations/site-networks-ts-time-ago"
+    # stacklevel=2 -> the warning is attributed to the caller (this test file).
+    assert record[0].filename == __file__
+
+
+@responses.activate
+def test_get_site_consumption_breakdown_time_ago_is_deprecated(client):
+    mock_data = {"breakdown": "data"}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/consumption-breakdown-time-ago",
+        json=mock_data,
+        status=200,
+    )
+
+    with pytest.warns(DeprecationWarning, match="get_top_consumption") as record:
+        result = client.get_site_consumption_breakdown_time_ago("site-1")
+
+    assert result == mock_data
+    parsed = urlparse(responses.calls[0].request.url)
+    assert parsed.path == "/api/aggregations/consumption-breakdown-time-ago"
+    assert record[0].filename == __file__
