@@ -26,6 +26,10 @@ The client currently supports the following methods:
 - `get_site_time_series(self, site_id, measure_kind = "FLOW", aggregation_level = "HOUR", aggregation_type = None, time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)`: Retrieves the whole-site rollup time series data for a specific site, based on the provided parameters.
 - `get_top_consumption(self, site_id, aggregation_level = "DAY", time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)`: Retrieves the per-device consumption breakdown (top 5 devices + "others") for a specific site.
 - `get_ecowatt(self)`: Retrieves the RTE EcoWatt grid-stress forecast (array of daily entries with a GREEN/ORANGE/RED status and 24 hourly values). Takes no parameters.
+- `switch_capacity(self, capacity_id, enable)`: Turns a switch/relay capacity on or off (`PUT /capacities/{id}/switch`). Takes the numeric capacity `id`.
+- `set_pilot_wire(self, capacity_id, state)`: Sets the pilot-wire order of a heating capacity (`PUT /capacities/{id}/pilot-wire`). `state` is passed through as-is; valid values are backend-defined (check the capacity's `selectValues`) and were **not** verified against a live pilot-wire device.
+- `set_thermal_mode(self, capacity_id, state)`: Sets the thermal mode of a thermostat capacity, e.g. eco / comfort (`PUT /capacities/{id}/thermal-mode`). Same `state` pass-through caveat as `set_pilot_wire`.
+- `set_thermostat_set_point(self, capacity_id, value)`: Sets the target set-point of a thermostat capacity (`PUT /capacities/{id}/thermostat-set-point`). `value` (temperature) is passed through as-is.
 
 `start`/`end` accept a `datetime` or ISO-8601 string and select an absolute window instead of the relative `time_ago_*` params; a naive `datetime` is treated as UTC:
 

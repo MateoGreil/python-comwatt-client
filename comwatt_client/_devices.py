@@ -68,17 +68,3 @@ class DevicesMixin(_BaseClient):
 
         """
         return self._request("GET", f"/devicekinds/by-site-uid/{site_uid}").json()
-
-    def switch_capacity(self, capacity_id: int | str, enable: bool) -> dict[str, Any]:
-        """
-        Switch a specific capcaity to the enable value.
-
-        Args:
-            capacity_id (str): The ID of the capacity.
-            enable (bool): The target state.
-
-        Returns:
-            dict: A dictionary containing the response from the API.
-
-        """
-        return self._request("PUT", f"/capacities/{capacity_id}/switch?enable={str(enable).lower()}").json()
