@@ -29,3 +29,7 @@ class ComwattAuthError(ComwattError):
 class ComwattAPIError(ComwattError):
     """Any other unexpected HTTP status from the Comwatt API, including
     non-credential failures on authentication."""
+
+
+class ComwattStreamingError(ComwattError):
+    """WebSocket/STOMP streaming failure."""

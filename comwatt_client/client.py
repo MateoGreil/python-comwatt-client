@@ -7,9 +7,10 @@ from ._devices import DevicesMixin
 from ._grid import GridMixin
 from ._sites import SitesMixin
 from ._connected_objects import ConnectedObjectsMixin
+from ._streaming import StreamingMixin
 
 
-class ComwattClient(AuthMixin, AggregationsMixin, CapacitiesMixin, DevicesMixin, GridMixin, SitesMixin, ConnectedObjectsMixin):
+class ComwattClient(AuthMixin, AggregationsMixin, CapacitiesMixin, DevicesMixin, GridMixin, SitesMixin, ConnectedObjectsMixin, StreamingMixin):
     """
     A client for interacting with the Comwatt API.
 

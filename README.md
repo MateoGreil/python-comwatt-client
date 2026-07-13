@@ -44,6 +44,7 @@ client.get_device_ts_time_ago(
 ```
 - `get_device(self, device_id)`: Retrieves information about a specific device.
 - `put_device(self, device_id, payload)`: Updates a specific device with the provided payload.
+- `stream_measurements(self, site)`: Streams live measurements (`FLOW` / `STATE`) for a single site over STOMP-over-WebSocket. Takes one site dict (as returned by `get_sites`); yields `Measurement` / `CapacityChanged` events. Requires the optional `[stream]` extra (`websocket-client`), and subscribes to the `siteUid` topic (the short `site["siteUid"]` string), not the numeric id.
 
 ## Installation
 You can install the Comwatt Python Client using pip. Run the following command:
@@ -124,6 +125,29 @@ except ComwattAuthError:
 except ComwattAPIError as e:
     print(e.status_code, e.url, e.detail)
 ```
+
+## Realtime streaming (optional)
+
+For live measurements, install the optional streaming extra (adds `websocket-client`):
+
+```
+pip install comwatt-client[stream]
+```
+
+Then iterate a single site's measurements as they arrive over STOMP-over-WebSocket:
+
+```python
+from comwatt_client import ComwattClient
+
+client = ComwattClient()
+client.authenticate("username", "password")
+
+sites = client.get_sites()
+for ev in client.stream_measurements(sites[0]):
+    print(ev)
+```
+
+The generator yields `Measurement` (live `FLOW` / `STATE` values) and `CapacityChanged` (switch/state changes) events, and stops when the WebSocket drops — the caller is responsible for reconnecting. `QUANTITY` measures are emitted only on bucket rollover, so keep a slow REST fallback (e.g. `get_site_time_series`) for absolute totals.
 
 ## Contributing
 Contributions to the Comwatt Python Client are welcome! If you find any issues or have suggestions for improvement, please open an issue or submit a pull request on the GitHub repository.

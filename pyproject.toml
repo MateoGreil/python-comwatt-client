@@ -27,6 +27,9 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 
+[project.optional-dependencies]
+stream = ["websocket-client>=1.6"]
+
 [project.urls]
 Homepage = "https://github.com/MateoGreil/python-comwatt-client"
 
