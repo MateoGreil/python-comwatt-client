@@ -41,6 +41,8 @@ class FakeWS:
             raise ws_lib.WebSocketConnectionClosedException()
         frame = self._frames[self._index]
         self._index += 1
+        if isinstance(frame, Exception):
+            raise frame
         return frame
 
     def close(self):
@@ -195,3 +197,305 @@ def test_stream_measurements_missing_extra_raises_streaming_error(monkeypatch, c
     with pytest.raises(ComwattStreamingError) as exc_info:
         list(client.stream_measurements(SITE))
     assert "comwatt-client[stream]" in str(exc_info.value)
+
+
+# ---------------------------------------------------------------------------
+# Helpers for reconnect tests
+# ---------------------------------------------------------------------------
+
+class FakeTime:
+    def __init__(self):
+        self.sleep_args = []
+
+    def sleep(self, s):
+        self.sleep_args.append(s)
+
+
+class FakeRandom:
+    def uniform(self, a, b):
+        return b
+
+
+# ---------------------------------------------------------------------------
+# Reconnect tests (Task 1)
+# ---------------------------------------------------------------------------
+
+
+def test_stream_default_no_reconnect_single_open_call(monkeypatch, client):
+    """Default (reconnect omitted): exactly one _open_websocket call; backward compat."""
+    client.session.cookies.set("cwt_session", "abc123")
+    open_calls = [0]
+    fake = FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+
+    def counting_open(cookie, timeout):
+        open_calls[0] += 1
+        return fake
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", counting_open)
+
+    events = list(client.stream_measurements(SITE))
+
+    assert open_calls[0] == 1
+    assert len(events) == 1
+    assert isinstance(events[0], Measurement)
+
+
+def test_stream_reconnect_resumes_transparently(monkeypatch, client):
+    """reconnect=True: measurements from two sessions are yielded in order."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake1 = FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+    fake2 = FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+    ws_iter = iter([fake1, fake2])
+    open_calls = [0]
+
+    def sequenced_open(cookie, timeout):
+        open_calls[0] += 1
+        try:
+            return next(ws_iter)
+        except StopIteration:
+            raise ws_lib.WebSocketException("no more connections")
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", sequenced_open)
+    fake_time = FakeTime()
+    monkeypatch.setattr("comwatt_client._streaming.time", fake_time)
+    monkeypatch.setattr("comwatt_client._streaming.random", FakeRandom())
+
+    events = []
+    with pytest.raises(ComwattStreamingError):
+        for e in client.stream_measurements(SITE, reconnect=True, reconnect_max_attempts=1):
+            events.append(e)
+
+    assert len(events) == 2
+    assert all(isinstance(e, Measurement) for e in events)
+    assert open_calls[0] == 3  # fake1, fake2, then one failed attempt → give up
+    assert fake_time.sleep_args == []
+
+
+def test_stream_exponential_backoff_with_cap(monkeypatch, client):
+    """Backoff sequence: base, base*2, base*4, ..., capped at reconnect_backoff_max."""
+    client.session.cookies.set("cwt_session", "abc123")
+
+    def always_fail(cookie, timeout):
+        raise ws_lib.WebSocketException("connection refused")
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", always_fail)
+    fake_time = FakeTime()
+    monkeypatch.setattr("comwatt_client._streaming.time", fake_time)
+    monkeypatch.setattr("comwatt_client._streaming.random", FakeRandom())
+
+    with pytest.raises(ComwattStreamingError):
+        list(client.stream_measurements(
+            SITE, reconnect=True,
+            reconnect_backoff=1.0,
+            reconnect_backoff_max=4.0,
+            reconnect_max_attempts=5,
+        ))
+
+    assert fake_time.sleep_args == [1.0, 2.0, 4.0, 4.0]
+
+
+def test_stream_reconnect_gives_up_after_max_attempts(monkeypatch, client):
+    """reconnect=True, always fails → ComwattStreamingError after reconnect_max_attempts."""
+    client.session.cookies.set("cwt_session", "abc123")
+    open_calls = [0]
+
+    def always_fail(cookie, timeout):
+        open_calls[0] += 1
+        raise ws_lib.WebSocketException("connection refused")
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", always_fail)
+    monkeypatch.setattr("comwatt_client._streaming.time", FakeTime())
+    monkeypatch.setattr("comwatt_client._streaming.random", FakeRandom())
+
+    with pytest.raises(ComwattStreamingError) as exc_info:
+        list(client.stream_measurements(SITE, reconnect=True, reconnect_max_attempts=3))
+
+    assert open_calls[0] == 3
+    assert "3" in str(exc_info.value)
+
+
+def test_stream_connection_error_wrapping_no_reconnect(monkeypatch, client):
+    """reconnect=False: WebSocketException from _open_websocket → ComwattStreamingError."""
+    client.session.cookies.set("cwt_session", "abc123")
+
+    def fail_open(cookie, timeout):
+        raise ws_lib.WebSocketException("TLS error")
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", fail_open)
+
+    with pytest.raises(ComwattStreamingError):
+        list(client.stream_measurements(SITE))
+
+
+def test_stream_auth_refresh_on_connect(monkeypatch, client):
+    """401 on first open → _reauthenticate called → second open returns working FakeWS."""
+    client.session.cookies.set("cwt_session", "abc123")
+    client._username = "user@example.com"
+    client._auth_hash = "deadbeef"
+    reauth_calls = [0]
+
+    def fake_reauth():
+        reauth_calls[0] += 1
+        client.session.cookies.set("cwt_session", "new_token")
+
+    client._reauthenticate = fake_reauth
+    open_calls = [0]
+    working_fake = FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+
+    def open_with_first_401(cookie, timeout):
+        open_calls[0] += 1
+        if open_calls[0] == 1:
+            raise ws_lib.WebSocketBadStatusException("Handshake status 401", 401)
+        return working_fake
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", open_with_first_401)
+
+    events = list(client.stream_measurements(SITE))
+
+    assert reauth_calls[0] == 1
+    assert open_calls[0] == 2
+    assert len(events) == 1
+    assert isinstance(events[0], Measurement)
+
+
+def test_stream_auth_rejection_terminal(monkeypatch, client):
+    """Always 401 → ComwattAuthError; _open_websocket called at most twice."""
+    client.session.cookies.set("cwt_session", "abc123")
+    client._username = "user@example.com"
+    client._auth_hash = "deadbeef"
+    client._reauthenticate = lambda: client.session.cookies.set("cwt_session", "new_token")
+    open_calls = [0]
+
+    def always_401(cookie, timeout):
+        open_calls[0] += 1
+        raise ws_lib.WebSocketBadStatusException("Handshake status 401", 401)
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", always_401)
+
+    with pytest.raises(ComwattAuthError):
+        list(client.stream_measurements(SITE))
+
+    assert open_calls[0] == 2
+
+
+def test_stream_backoff_resets_after_good_session(monkeypatch, client):
+    """After a successful session, delay resets to reconnect_backoff before next failure sleep."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake1 = FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+    open_calls = [0]
+
+    def mixed_open(cookie, timeout):
+        open_calls[0] += 1
+        if open_calls[0] == 2:
+            return fake1
+        raise ws_lib.WebSocketException("connection failed")
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", mixed_open)
+    fake_time = FakeTime()
+    monkeypatch.setattr("comwatt_client._streaming.time", fake_time)
+    monkeypatch.setattr("comwatt_client._streaming.random", FakeRandom())
+
+    events = []
+    with pytest.raises(ComwattStreamingError):
+        for e in client.stream_measurements(
+            SITE, reconnect=True,
+            reconnect_backoff=1.0,
+            reconnect_backoff_max=60.0,
+            reconnect_max_attempts=2,
+        ):
+            events.append(e)
+
+    # attempt 1: fail → sleep(1.0), delay→2.0
+    # attempt 2: fake1 connects → A → drops → RESET delay→1.0 (was 2.0)
+    # attempt 3: fail → sleep(1.0) ← RESET, not 2.0
+    # attempt 4: fail → max reached → raise
+    assert fake_time.sleep_args == [1.0, 1.0]
+    assert len(events) == 1
+
+
+def test_stream_cleanup_under_reconnect(monkeypatch, client):
+    """reconnect=True, gen.close() → FakeWS.closed is True and DISCONNECT was sent."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake = FakeWS([CONNECTED_FRAME, MEASURES_FRAME, MEASURES_FRAME])
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", lambda c, t: fake)
+    monkeypatch.setattr("comwatt_client._streaming.time", FakeTime())
+    monkeypatch.setattr("comwatt_client._streaming.random", FakeRandom())
+
+    gen = client.stream_measurements(SITE, reconnect=True)
+    next(gen)
+    gen.close()
+
+    assert fake.closed is True
+    assert any(f.startswith("DISCONNECT") for f in fake.sent)
+
+
+def test_stream_handshake_websocket_exc_no_reconnect_raises_and_closes(monkeypatch, client):
+    """reconnect=False: WebSocketException during STOMP handshake → ComwattStreamingError, ws closed."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake = FakeWS([ws_lib.WebSocketException("server dropped during handshake")])
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", lambda c, t: fake)
+
+    with pytest.raises(ComwattStreamingError, match="STOMP handshake"):
+        list(client.stream_measurements(SITE))
+
+    assert fake.closed is True
+
+
+def test_stream_handshake_websocket_exc_retried_with_reconnect(monkeypatch, client):
+    """reconnect=True: WebSocketException during handshake is caught and retried; second attempt delivers measurement."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake1 = FakeWS([ws_lib.WebSocketException("server dropped during handshake")])
+    fake2 = FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+    ws_queue = [fake1, fake2]
+
+    def sequenced_open(cookie, timeout):
+        if ws_queue:
+            return ws_queue.pop(0)
+        raise ws_lib.WebSocketException("no more connections")
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", sequenced_open)
+    monkeypatch.setattr("comwatt_client._streaming.time", FakeTime())
+    monkeypatch.setattr("comwatt_client._streaming.random", FakeRandom())
+
+    events = []
+    with pytest.raises(ComwattStreamingError):
+        for e in client.stream_measurements(SITE, reconnect=True, reconnect_max_attempts=2):
+            events.append(e)
+
+    assert len(events) == 1
+    assert isinstance(events[0], Measurement)
+
+
+def test_stream_reconnect_uses_fresh_cookie_after_reauth(monkeypatch, client):
+    """After reauthentication in iteration 1, subsequent reconnect iterations use the new cookie."""
+    client.session.cookies.set("cwt_session", "old_token")
+    client._username = "user@example.com"
+    client._auth_hash = "deadbeef"
+
+    def fake_reauth():
+        client.session.cookies.set("cwt_session", "new_token")
+
+    client._reauthenticate = fake_reauth
+    recorded_cookies = []
+    call_count = [0]
+
+    def recording_open(cookie, timeout):
+        recorded_cookies.append(cookie)
+        call_count[0] += 1
+        if call_count[0] == 1:
+            raise ws_lib.WebSocketBadStatusException("Handshake status 401", 401)
+        if call_count[0] == 2:
+            return FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+        raise ws_lib.WebSocketException("end of test")
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", recording_open)
+    monkeypatch.setattr("comwatt_client._streaming.time", FakeTime())
+    monkeypatch.setattr("comwatt_client._streaming.random", FakeRandom())
+
+    with pytest.raises(ComwattStreamingError):
+        list(client.stream_measurements(SITE, reconnect=True, reconnect_max_attempts=1))
+
+    assert recorded_cookies[0] == "old_token"
+    assert recorded_cookies[1] == "new_token"
+    assert recorded_cookies[2] == "new_token"
