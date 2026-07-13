@@ -2,7 +2,7 @@ from .client import ComwattClient
 from .exceptions import ComwattAPIError, ComwattAuthError, ComwattError, ComwattStreamingError
 from ._streaming import CapacityChanged, Measurement
 
-__version__ = "0.3.5"
+__version__ = "0.4.0"
 
 __all__ = [
     "ComwattClient",
