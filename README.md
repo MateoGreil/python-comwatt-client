@@ -162,5 +162,44 @@ for ev in client.stream_measurements(
 
 The delay between failed connection attempts starts at `reconnect_backoff` seconds and doubles up to `reconnect_backoff_max`. `reconnect_max_attempts` counts **consecutive** failed attempts (resets to zero after any successful connection). An auth rejection (HTTP 401/403) is always terminal and will not be retried. `QUANTITY` measures are emitted only on bucket rollover, so keep a slow REST fallback (e.g. `get_site_time_series`) for absolute totals.
 
+### Mapping streamed measurements to devices
+
+The stream yields measurements keyed by an opaque `capacityId` string. Sensor and switch capacities use `AZUREIOT-co.{N}.instances.{i}.{sensor|switch}.{j}.data`; grid-exchange and battery capacities keep the `sensor.{j}` segment and append the quantity instead — `...sensor.{j}.withdrawal.data`, `...sensor.{j}.injection.data`, `...sensor.{j}.battery_charge.data`, `...sensor.{j}.battery_discharge.data`. To route them to a device and interpret them, join them against `get_connected_objects(site_id)`:
+
+- **`capacityId` ↔ capacity object** — `Measurement.capacity_id` is the `capacityId` string found on each capacity object. That same object also carries `deviceId`, `nature` (e.g. `CLAMP`, `POWER_SENSOR`, `POWER_SWITCH`), `measureKind`, and `production` (bool) — enough to route a measurement to its device and determine its sign with no separate map.
+- **Multi-instance / polyphase devices** — a device can expose several `SENSOR` capacities (a 3-phase solar inverter pushes `instances.0`, `instances.1`, `instances.2`). The device's instantaneous power is the **sum** of its `FLOW` capacities, not any single instance. Polyphase capacities carry a `phase` field such as `POSITIVE_1` / `POSITIVE_2` / `POSITIVE_3` (not every capacity has one).
+- **Typed value fields** — `Measurement` parses the raw string into `value_float` (when it is numeric — watts for `FLOW`) and `value_bool` (when it is `true`/`false` — on/off for `STATE`). In practice `FLOW` populates `value_float` and `STATE` populates `value_bool`; `Measurement.value` is the raw string the server sent — prefer the typed field.
+- **Cadence** — the server pushes measurements in bursts roughly every 15 seconds, grouped per connected object (the `co.{N}` segment of the `capacityId`). It is not a fixed per-device poll: expect a burst of many measures close together, then a gap.
+- **Use `get_connected_objects()`, not `get_devices()`, to build the route** — `get_connected_objects(site_id)` returns each connected object (the `co.{N}` segment, via its `coId`) with **all** its capacities, each carrying `capacityId` / `deviceId` / `nature` / `measureKind`. `get_devices()` returns the user-facing device list, but the grid-meter and battery parents come back with empty `features` and `capacities`, so their routable capacities are not exposed there.
+
+  This is the only way to map grid exchange and battery: `...sensor.{j}.withdrawal.data` routes to a `WITHDRAWAL` part-child device, `...sensor.{j}.injection.data` to an `INJECTION` one, `...sensor.{j}.battery_charge.data` to a `BATTERY_CHARGE` device, and `...sensor.{j}.battery_discharge.data` to a `BATTERY_DISCHARGE` device. These are real devices — part-children of the `GRID_METER` / `BATTERY` parent (identified by `deviceKind.code`, not a `nature` field) — that also show up in `get_measure_keys(site_id)`. Some physical clamps on a multi-channel box are present as capacities but have `deviceId: null` until they are assigned to a device — drop those from the route.
+- **Switch state** — a device with a `POWER_SWITCH` / `RELAY` capacity receives its on/off state on the stream as `STATE` measurements on a `...switch.N.data` `capacityId`, parallel to the `...sensor.N.data` `FLOW` `capacityId` on the same instance.
+- **`CapacityChanged` vs the route** — `CapacityChanged` is also yielded for switch state changes, but its `capacity_id` is the **numeric** capacity `id` (the one `switch_capacity` takes), not the `capacityId` string — don't match it against the string route. Switch changes were not observed during this check (no switch was toggled manually).
+
+Building the `capacityId → (deviceId, nature, production)` route from `get_connected_objects()` (covers every mappable capacity, including grid exchange and battery):
+
+```python
+from comwatt_client import ComwattClient, Measurement
+
+client = ComwattClient()
+client.authenticate("username", "password")
+sites = client.get_sites()
+
+route = {}
+for obj in client.get_connected_objects(site_id=sites[0]["id"]):
+    for cap in obj["capacities"]:
+        device_id = cap["deviceId"]
+        if device_id is None:
+            continue
+        route[cap["capacityId"]] = (device_id, cap["nature"], cap.get("production", False))
+
+for ev in client.stream_measurements(sites[0], reconnect=True):
+    if isinstance(ev, Measurement):
+        device_id, nature, production = route.get(ev.capacity_id, (None, None, None))
+        if device_id is not None:
+            print(f"device={device_id} nature={nature} production={production} "
+                  f"value={ev.value_float if ev.value_float is not None else ev.value_bool}")
+```
+
 ## Contributing
 Contributions to the Comwatt Python Client are welcome! If you find any issues or have suggestions for improvement, please open an issue or submit a pull request on the GitHub repository.
