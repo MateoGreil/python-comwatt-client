@@ -109,6 +109,13 @@ All verified `200` live. Ordered by value/effort.
 
 Need a consenting test site; quirks in §2.6.
 
+> **Constraint.** Whatever we probe against a live account, the test suite
+> keeps its current shape: `responses` with hand-written payloads. Never
+> commit a *captured* response (VCR/Betamax-style cassettes) recorded on a
+> real account — those carry the owner's name, postal address, phone, supply
+> number, account uuid, neighbouring Wi-Fi SSIDs and the `cwt_session`
+> cookie, and on a public repo they stay in the history forever.
+
 - [ ] `set_device_mode(device_id, ON|OFF|COMWATT)` — the "Off / On / Auto" control.
 - [ ] Create/update typical days, update a planning.
 - [ ] `set_alert_config(device_id, min, max, period, activated)`.
