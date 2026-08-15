@@ -89,7 +89,7 @@ print(devices)
 time_series_data = client.get_device_ts_time_ago(devices[0]['id'])
 print(time_series_data)
 
-# Set the control mode of a specific device to MANUL
+# Set the control mode of a specific device to MANUAL
 device = client.get_device(devices[0]['id'])
 device['configuration']['controlMode'] = 'MANUAL'
 client.put_device(device['id'], device)
@@ -200,6 +200,29 @@ for ev in client.stream_measurements(sites[0], reconnect=True):
             print(f"device={device_id} nature={nature} production={production} "
                   f"value={ev.value_float if ev.value_float is not None else ev.value_bool}")
 ```
+
+## Related projects
+
+Actively maintained projects worth knowing about. This is deliberately not an
+inventory of everything Comwatt-related on GitHub — most of it is abandoned or
+pre-gen4, and pointing you at a dead scraper would be worse than saying nothing.
+
+- [homeassistant-comwatt](https://github.com/MateoGreil/homeassistant-comwatt) — Home Assistant integration built on this library (gen 4). If domotics is your goal, install this via HACS rather than wiring the client up yourself.
+- [comwatt_indepbox](https://github.com/ZoomeoTooknor/comwatt_indepbox) — Home Assistant integration for pre-gen4 boxes (`go.comwatt.com`). Useful if you landed here with older hardware and want a working integration rather than a Python library.
+- [solareco](https://github.com/paulthvt/solareco) — Kotlin Multiplatform app (Android / desktop) with its own gen-4 client. The only other actively maintained implementation, and a handy second opinion when an undocumented endpoint changes behaviour.
+
+## API field notes
+
+The API this client talks to is private and undocumented, so
+[`docs/energy.comwatt.com/`](docs/energy.comwatt.com/) collects
+reverse-engineered notes on it: authentication, the aggregation/time-series
+endpoints, capacities, the STOMP-over-WebSocket stream, and the gotchas that
+bite implementors (two ids per site, `@ref` graphs, mandatory
+`aggregationLevel`, ...). They are best-effort and dated — verify anything
+load-bearing against the live API.
+
+[`ROADMAP.md`](ROADMAP.md) tracks what is still missing from both the notes and
+the client.
 
 ## Contributing
 Contributions to the Comwatt Python Client are welcome! If you find any issues or have suggestions for improvement, please open an issue or submit a pull request on the GitHub repository.
