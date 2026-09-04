@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from ._core import _BaseClient
+from ._series import normalize_time_series
 
 
 def _format_timestamp(value: datetime | str) -> str:
@@ -71,7 +72,8 @@ class AggregationsMixin(_BaseClient):
                 Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
 
         Returns:
-            dict: The time series data.
+            dict: The time series data. Numeric series are normalized to float/None
+                samples; timestamps are left untouched.
 
         Raises:
             ValueError: If `end` is given without `start`.
@@ -99,7 +101,9 @@ class AggregationsMixin(_BaseClient):
             start=start, end=end,
         )
 
-        return self._request("GET", "/aggregations/site-networks-ts-time-ago", params=params).json()
+        return normalize_time_series(
+            self._request("GET", "/aggregations/site-networks-ts-time-ago", params=params).json()
+        )
 
     def get_site_consumption_breakdown_time_ago(self, site_id: int | str,
             aggregation_level: str = "HOUR",
@@ -178,7 +182,8 @@ class AggregationsMixin(_BaseClient):
                 Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
 
         Returns:
-            dict: The time series data.
+            dict: The time series data. Numeric series are normalized to float/None
+                samples; timestamps are left untouched.
 
         Raises:
             ValueError: If `end` is given without `start`.
@@ -193,7 +198,9 @@ class AggregationsMixin(_BaseClient):
             start=start, end=end,
         )
 
-        return self._request("GET", "/aggregations/time-series", params=params).json()
+        return normalize_time_series(
+            self._request("GET", "/aggregations/time-series", params=params).json()
+        )
 
     def get_site_time_series(self, site_id: int | str,
             measure_kind: str = "FLOW",
@@ -222,7 +229,8 @@ class AggregationsMixin(_BaseClient):
 
         Returns:
             dict: The site-level time series data (productions, consumptions, injections, withdrawals,
-                charges, discharges and rate series).
+                charges, discharges and rate series). Numeric series are normalized to
+                float/None samples; timestamps are left untouched.
 
         Raises:
             ValueError: If `end` is given without `start`.
@@ -237,7 +245,9 @@ class AggregationsMixin(_BaseClient):
             start=start, end=end,
         )
 
-        return self._request("GET", "/aggregations/site-time-series", params=params).json()
+        return normalize_time_series(
+            self._request("GET", "/aggregations/site-time-series", params=params).json()
+        )
 
     def get_top_consumption(self, site_id: int | str,
             aggregation_level: str = "DAY",

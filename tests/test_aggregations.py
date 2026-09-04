@@ -756,3 +756,96 @@ def test_get_site_consumption_breakdown_time_ago_is_deprecated(client):
     parsed = urlparse(responses.calls[0].request.url)
     assert parsed.path == "/api/aggregations/consumption-breakdown-time-ago"
     assert record[0].filename == __file__
+
+
+@responses.activate
+def test_get_site_time_series_coerces_string_samples(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json={
+            "timestamps": ["2026-08-29T10:00:00Z", "2026-08-29T11:00:00Z", "2026-08-29T12:00:00Z"],
+            "productions": ["1137.9667", None, 659.36664],
+            "consumptions": ["N/A", "", "1123.8667"],
+            "injections": [0, True, "0.0"],
+        },
+        status=200,
+    )
+
+    result = client.get_site_time_series("site-1", "QUANTITY", "HOUR", None, "DAY", 8)
+
+    assert result == {
+        "timestamps": ["2026-08-29T10:00:00Z", "2026-08-29T11:00:00Z", "2026-08-29T12:00:00Z"],
+        "productions": [1137.9667, None, 659.36664],
+        "consumptions": [None, None, 1123.8667],
+        "injections": [0.0, None, 0.0],
+    }
+    assert all(
+        isinstance(sample, float)
+        for series in (result["productions"], result["consumptions"], result["injections"])
+        for sample in series
+        if sample is not None
+    )
+
+
+@responses.activate
+def test_get_device_ts_time_ago_coerces_string_samples(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json={
+            "timestamps": ["2026-08-29T10:00:00Z", "2026-08-29T11:00:00Z"],
+            "values": ["1.25", None, 3],
+        },
+        status=200,
+    )
+
+    result = client.get_device_ts_time_ago("device-1", "QUANTITY", "HOUR", "NONE")
+
+    assert result == {
+        "timestamps": ["2026-08-29T10:00:00Z", "2026-08-29T11:00:00Z"],
+        "values": [1.25, None, 3.0],
+    }
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@responses.activate
+def test_get_site_networks_ts_time_ago_coerces_string_samples(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-networks-ts-time-ago",
+        json={
+            "timestamps": ["2026-08-29T10:00:00Z"],
+            "values": ["2.5"],
+        },
+        status=200,
+    )
+
+    result = client.get_site_networks_ts_time_ago("site-1")
+
+    assert result == {
+        "timestamps": ["2026-08-29T10:00:00Z"],
+        "values": [2.5],
+    }
+
+
+@responses.activate
+def test_get_site_time_series_leaves_non_series_fields_untouched(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json={
+            "unit": "kWh",
+            "counts": {"total": "4"},
+            "timestamps": ["2026-08-29T10:00:00Z"],
+            "productions": ["1.5"],
+        },
+        status=200,
+    )
+
+    result = client.get_site_time_series("site-1")
+
+    assert result["unit"] == "kWh"
+    assert result["counts"] == {"total": "4"}
+    assert result["timestamps"] == ["2026-08-29T10:00:00Z"]
+    assert result["productions"] == [1.5]
