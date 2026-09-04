@@ -849,3 +849,22 @@ def test_get_site_time_series_leaves_non_series_fields_untouched(client):
     assert result["counts"] == {"total": "4"}
     assert result["timestamps"] == ["2026-08-29T10:00:00Z"]
     assert result["productions"] == [1.5]
+
+
+@responses.activate
+def test_get_site_time_series_drops_non_finite_samples(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/site-time-series",
+        json={
+            "timestamps": ["2026-08-29T10:00:00Z", "2026-08-29T11:00:00Z", "2026-08-29T12:00:00Z"],
+            "productions": [float("nan"), float("inf"), "2.5"],
+            "charges": ["NaN", "-Infinity", 1.0],
+        },
+        status=200,
+    )
+
+    result = client.get_site_time_series("site-1", "QUANTITY", "HOUR", None, "DAY", 8)
+
+    assert result["productions"] == [None, None, 2.5]
+    assert result["charges"] == [None, None, 1.0]

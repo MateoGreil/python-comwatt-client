@@ -9,6 +9,7 @@ every list except ``timestamps`` contains only ``float`` or ``None`` samples.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 
@@ -18,12 +19,13 @@ def _coerce_sample(item: Any) -> Any:
     if isinstance(item, bool):
         return None
     if isinstance(item, (int, float)):
-        return float(item)
+        return float(item) if math.isfinite(item) else None
     if isinstance(item, str):
         try:
-            return float(item.strip())
+            parsed = float(item.strip())
         except ValueError:
             return None
+        return parsed if math.isfinite(parsed) else None
     return item
 
 
@@ -37,7 +39,8 @@ def normalize_time_series(payload: Any) -> Any:
     - numeric strings (e.g. ``"12.34"``) become ``float``
     - ``None`` stays ``None``
     - anything else usable as a number gap (empty or unparseable strings,
-      booleans) becomes ``None``
+      booleans, non-finite values such as ``NaN``/``inf`` — the API emits
+      them for partial hours) becomes ``None``
 
     Non-list fields and unknown structures are returned unchanged, so extra
     metadata the API may add is never altered.
