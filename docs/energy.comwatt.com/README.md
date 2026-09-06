@@ -101,9 +101,6 @@ single endpoint:
 - **`?id=A&id=B&id=C` on `/api/aggregations/time-series` returns only the
   FIRST id's series** (order-dependent; not a sum, not per-device).
   Comma-separated `?id=A,B` is rejected.
-- **`/api/plannings/?siteId=...` returns 404 on an empty list** — that
-  is Spring's default for empty result sets, not a missing endpoint.
-
 ## Conventions for non-trivial requests
 
 - **Content-type** for `POST` / `PUT` bodies is `application/json`.
@@ -135,6 +132,7 @@ Typical codes observed:
 - `400` — missing/invalid params.
 - `401` — session expired (cookie rejected).
 - `403` — role-forbidden endpoint (back-office, gateway-by-uid, site profile).
-- `404` — malformed path **or** "no result" for some endpoints
-  (`/plannings/?siteId=` returns 404 on an empty list — Spring's default
-  behaviour, not a missing endpoint).
+- `404` — malformed path. Example: the trailing-slash
+  `/plannings/?siteId=` variant, which misses every controller mapping
+  and falls through to the static handler (`No static resource
+  api/plannings.`); without the slash the same query returns `200`.

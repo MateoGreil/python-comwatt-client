@@ -61,12 +61,32 @@ full list (`/api/connectedobjects?siteId=`, `?gatewayUid=`, by-id, etc.).
 ## Plannings / schedules
 
 - `GET /api/plannings?deviceId={deviceId}` — paginated plannings for a
-  device. Empty for most devices.
+  device. `200` on every device tested (re-verified 2026-09-06: 19
+  devices, 13 kinds); `content` empty for most — on the probe account
+  only the schedulable loads (washing machine, dishwasher) carried one.
+
+  > ⚠ **Correction (2026-09-06).** An earlier version of this note (and
+  > the roadmap) claimed this variant answered `500 Internal error`,
+  > making the per-device planning view unusable. Not reproducible:
+  > every device kind returns `200`. Either fixed server-side since
+  > 2026-08-15, or a bad probe URL back then.
+
+- `GET /api/plannings?siteId={siteId}` — `200` paginated; **no trailing
+  slash**. `siteId` is accepted but appears ignored: a bogus id — or no
+  id at all — returns the same list of the authenticated user's
+  plannings (re-verified 2026-09-06). Treat it as "all my plannings".
+
+  > ⚠ **Correction (2026-09-06).** This was previously documented as
+  > `GET /api/plannings/?siteId=` "returns 404 when the user has no
+  > plannings — Spring's default behaviour for empty result sets".
+  > Misdiagnosis: the trailing-slash URL answers `404` with
+  > `No static resource api/plannings.` (Spring's static-handler
+  > fallthrough for an unmatched path) even for a site that **has**
+  > plannings, while the same query without the slash returns `200`
+  > with its plannings. There is no "404 on empty list" behaviour.
+
 - `GET /api/plannings/configurationModes?deviceId={deviceId}` — the legal
   configuration modes for a device (e.g. `["MANUAL"]`).
-- `GET /api/plannings/?siteId={siteId}` — site-wide variant; returns 404
-  when the user has no plannings (Spring's default behaviour for empty
-  result sets, not a missing endpoint).
 - `POST /api/plannings` — create.
 - `GET|PUT|DELETE /api/plannings/{planningId}`
 
