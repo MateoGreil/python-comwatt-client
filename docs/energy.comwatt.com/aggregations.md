@@ -56,10 +56,10 @@ Take-aways from the helper:
 | Param | Values seen |
 |---|---|
 | `measureKind` | `FLOW` (instantaneous power, W), `QUANTITY` (energy, Wh), `STATE` (relay/contactor on/off), `VALUE` (e.g. temperature °C), `INDEX` (cumulative meter index), `RATE` (ratio, e.g. self-consumption %) |
-| `aggregationLevel` | `NONE`, `HOUR`, `DAY`, `WEEK`, `MONTH`, `YEAR` (the SPA also uses `scale` with the same values; mapping `HOUR→NONE`, `WEEK→HOUR`, `MONTH→DAY`, `YEAR→MONTH`) |
+| `aggregationLevel` | `NONE`, `HOUR`, `DAY`, `MONTH`, `YEAR` (live-verified `200` on all five aggregation endpoints; `WEEK` is rejected with `400 "Failed to convert 'aggregationLevel' with value: 'WEEK'"`). The SPA's `scale` maps to it: `HOUR→NONE`, `WEEK→HOUR`, `MONTH→DAY`, `YEAR→MONTH` — the SPA never sends `aggregationLevel=WEEK`. |
 | `aggregationType` | `NONE`, `MIN`, `MAX`, `SUM`, `AVERAGE` |
 | `siteNetworkType` | `CONSUMPTION`, `INJECTION`, `WITHDRAWAL`, `PRODUCTION` (all live-verified `200`). `BATTERY` is **rejected** (`400 "Failed to convert 'siteNetworkType' with value: 'BATTERY'"`) despite `site-time-series` exposing `charges`/`discharges` — there is no battery `siteNetworkType`. |
-| `timeAgoUnit` | same as `aggregationLevel` |
+| `timeAgoUnit` | `HOUR`, `DAY`, `WEEK`, `MONTH`, `YEAR` (`WEEK` **is** valid here, unlike `aggregationLevel`; `NONE` is rejected) |
 | `timeAgoValue` | integer as a string, default `"1"` |
 
 ## 1. `GET /api/aggregations/time-series`

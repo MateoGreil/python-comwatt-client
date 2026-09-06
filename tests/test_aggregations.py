@@ -632,7 +632,7 @@ def test_get_top_consumption_custom_params(client):
 
     result = client.get_top_consumption(
         "site-1",
-        aggregation_level="WEEK",
+        aggregation_level="MONTH",
         time_ago_unit="MONTH",
         time_ago_value=3,
     )
@@ -641,7 +641,7 @@ def test_get_top_consumption_custom_params(client):
     request = responses.calls[0].request
     parsed = urlparse(request.url)
     qs = parse_qs(parsed.query)
-    assert qs["aggregationLevel"] == ["WEEK"]
+    assert qs["aggregationLevel"] == ["MONTH"]
     assert qs["timeAgoUnit"] == ["MONTH"]
     assert qs["timeAgoValue"] == ["3"]
 

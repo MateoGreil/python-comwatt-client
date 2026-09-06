@@ -15,7 +15,7 @@ against the live API before being relied upon.
 
 ## 1. Field-notes corrections (verified wrong or stale)
 
-- [ ] **`aggregationLevel` does not accept `WEEK`.** Live: `400 Failed to convert 'aggregationLevel' with value: 'WEEK'` on all three aggregation endpoints. Real set: `NONE`, `HOUR`, `DAY`, `MONTH`, `YEAR`. → `aggregations.md` (l.59) and the `get_*_time_series` docstrings.
+- [x] **`aggregationLevel` does not accept `WEEK`.** Live: `400 Failed to convert 'aggregationLevel' with value: 'WEEK'` on all three aggregation endpoints. Real set: `NONE`, `HOUR`, `DAY`, `MONTH`, `YEAR`. → `aggregations.md` (l.59) and the `get_*_time_series` docstrings.
 - [ ] **`GET /api/plannings?deviceId={id}` returns `500 Internal error`** (server-side bug, reproduced on 5 devices of different kinds). The per-device planning view is unusable; use the site-wide variant. → `misc-endpoints.md`.
 - [ ] **`/api/plannings/?siteId=…` 404 is caused by the trailing slash**, not by an empty result set (`No static resource api/plannings.`). Without the slash, `GET /api/plannings?siteId={siteId}` → `200` paginated. Our "Spring returns 404 on empty lists" gotcha is a misdiagnosis and should be dropped from `README.md` too.
 - [ ] **`GET /api/gateways/by-gateway-uid/{uid}` is no longer 403 for `END_USER`** — it returns `200`, as do `/api/gateways/{id}` and `/api/gateways/{id}/with-sales-company`. → `devices.md` (l.134).

@@ -60,9 +60,11 @@ class AggregationsMixin(_BaseClient):
         Args:
             site_id (str): The ID of the site.
             measure_kind (str): The kind of measure (default: "FLOW").
-            aggregation_level (str): The aggregation level (default: "NONE").
+            aggregation_level (str): The aggregation level (default: "NONE"). One of
+                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
             aggregation_type (str): The aggregation type (default: None, can be : None, "SUM", "MAX").
-            time_ago_unit (str): The unit of time ago (default: "HOUR").
+            time_ago_unit (str): The unit of time ago (default: "HOUR"). One of
+                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
             time_ago_value (int): The value of time ago (default: 1).
             start (datetime | str): The start of an absolute time window (default: None).
                 Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
@@ -116,8 +118,10 @@ class AggregationsMixin(_BaseClient):
 
         Args:
             site_id (str): The ID of the site.
-            aggregation_level (str): The aggregation level (default: "HOUR").
-            time_ago_unit (str): The unit of time ago (default: "DAY").
+            aggregation_level (str): The aggregation level (default: "HOUR"). One of
+                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
+            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
+                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
             time_ago_value (int): The value of time ago (default: 1).
             start (datetime | str): The start of an absolute time window (default: None).
                 Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
@@ -170,9 +174,11 @@ class AggregationsMixin(_BaseClient):
         Args:
             device_id (str): The ID of the device.
             measure_kind (str): The kind of measure (default: "FLOW").
-            aggregation_level (str): The aggregation level (default: "HOUR").
+            aggregation_level (str): The aggregation level (default: "HOUR"). One of
+                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
             aggregation_type (str): The aggregation type (default: "MAX").
-            time_ago_unit (str): The unit of time ago (default: "DAY").
+            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
+                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
             time_ago_value (str): The value of time ago (default: "1").
             start (datetime | str): The start of an absolute time window (default: None).
                 Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
@@ -216,9 +222,11 @@ class AggregationsMixin(_BaseClient):
         Args:
             site_id (str): The ID of the site.
             measure_kind (str): The kind of measure (default: "FLOW").
-            aggregation_level (str): The aggregation level (default: "HOUR").
+            aggregation_level (str): The aggregation level (default: "HOUR"). One of
+                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
             aggregation_type (str): The aggregation type (default: None, can be : None, "SUM", "MAX").
-            time_ago_unit (str): The unit of time ago (default: "DAY").
+            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
+                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
             time_ago_value (int): The value of time ago (default: 1).
             start (datetime | str): The start of an absolute time window (default: None).
                 Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
@@ -260,8 +268,10 @@ class AggregationsMixin(_BaseClient):
 
         Args:
             site_id (str): The ID of the site.
-            aggregation_level (str): The aggregation level (default: "DAY").
-            time_ago_unit (str): The unit of time ago (default: "DAY").
+            aggregation_level (str): The aggregation level (default: "DAY"). One of
+                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
+            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
+                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
             time_ago_value (int): The value of time ago (default: 1).
             start (datetime | str): The start of an absolute time window (default: None).
                 Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
