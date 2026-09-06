@@ -125,12 +125,36 @@ Broader than `/api/devices` — it also surfaces gateway-level entries.
 
 The Comwatt box itself (the `OCTOPUS_*` IoT gateway).
 
-- `GET  /api/gateways/{gatewayId}`
+Gateway **reads** are open to a normal `END_USER` (re-verified 2026-09-06
+across the probe account's six gateways — 3 × `POWER_GEN_4`, 2 ×
+`MONITOR_GEN_4` SmartPlugs, 1 × `ACCESSORY`): the three `GET`s below
+return `200` with the full gateway document (JSON-with-refs — handle
+`@ref` like everywhere else):
+
+```
+id, gatewayUid, connected, connectionEvent, updating, status,
+associateDate, createDate, updateDate, lotId, name,
+networkConfiguration, product, installer, salesCompany,
+connectedObjectReference
+```
+
+`connected` / `updating` / `status` are the "box offline / being
+updated" flags a health check wants.
+
+- `GET  /api/gateways/{gatewayId}` — `200` for `END_USER`.
 - `GET  /api/gateways/{gatewayId}/diagnostic`
 - `GET  /api/gateways/{gatewayId}/network`
 - `POST /api/gateways/{gatewayId}/netconnect`
 - `GET  /api/gateways/{gatewayId}/ssids`
-- `GET  /api/gateways/{gatewayId}/with-sales-company`
-- `GET  /api/gateways/by-gateway-uid/{GATEWAY_UID}` — 403 for `END_USER`
-  (admin-only).
+- `GET  /api/gateways/{gatewayId}/with-sales-company` — `200` for
+  `END_USER`; same key set as the plain `{gatewayId}` read.
+- `GET  /api/gateways/by-gateway-uid/{GATEWAY_UID}` — `200` for
+  `END_USER`.
 - `GET  /api/gateways/{gatewayUid}/scan-modbus-ip?port={port}`
+
+> ⚠ **Correction (2026-09-06).** `by-gateway-uid` was previously
+> documented as `403` for `END_USER` (admin-only). Not reproducible:
+> all three gateway reads return `200` on every gateway of the account
+> with a plain `END_USER` session. Either the role check was lifted
+> server-side since the last pass, or those earlier probes hit another
+> role boundary.

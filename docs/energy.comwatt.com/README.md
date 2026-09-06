@@ -131,7 +131,7 @@ Typical codes observed:
 - `200` — success (JSON body; sometimes empty string for no-content).
 - `400` — missing/invalid params.
 - `401` — session expired (cookie rejected).
-- `403` — role-forbidden endpoint (back-office, gateway-by-uid, site profile).
+- `403` — role-forbidden endpoint (back-office, site profile).
 - `404` — malformed path. Example: the trailing-slash
   `/plannings/?siteId=` variant, which misses every controller mapping
   and falls through to the static handler (`No static resource

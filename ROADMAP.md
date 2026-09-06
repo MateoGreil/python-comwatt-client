@@ -16,7 +16,6 @@ against the live API before being relied upon.
 ## 1. Field-notes corrections (verified wrong or stale)
 
 - [x] **`aggregationLevel` does not accept `WEEK`.** Live: `400 Failed to convert 'aggregationLevel' with value: 'WEEK'` on all three aggregation endpoints. Real set: `NONE`, `HOUR`, `DAY`, `MONTH`, `YEAR`. → `aggregations.md` (l.59) and the `get_*_time_series` docstrings.
-- [ ] **`GET /api/gateways/by-gateway-uid/{uid}` is no longer 403 for `END_USER`** — it returns `200`, as do `/api/gateways/{id}` and `/api/gateways/{id}/with-sales-company`. → `devices.md` (l.134).
 - [ ] **`GET /api/gateways/{gatewayId}/diagnostic` does not exist** (`404 No static resource`, and no such call in the bundle). Remove it. → `devices.md`.
 - [ ] **`/api/electricitycontract/{id}`: the TODO is resolved.** The path param is the **site id**, the response is a **JSON array** (`[]` when the site has no contract), and no query param is involved. → `misc-endpoints.md`.
 - [ ] **`/api/gateways/{…}/network` and `/ssids` take different ids** — a third instance of the "two ids" trap: `/ssids` needs the **numeric id** (a uid gives `400 Failed to convert 'gatewayId'`), while `/network` and `scan-modbus-ip` need the **`gatewayUid`** (a numeric id gives `412 gateway.not.found.for.fetching.network.details`). → `devices.md` + the gotchas list in `README.md`.
