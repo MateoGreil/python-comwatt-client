@@ -142,7 +142,6 @@ connectedObjectReference
 updated" flags a health check wants.
 
 - `GET  /api/gateways/{gatewayId}` — `200` for `END_USER`.
-- `GET  /api/gateways/{gatewayId}/diagnostic`
 - `GET  /api/gateways/{gatewayId}/network`
 - `POST /api/gateways/{gatewayId}/netconnect`
 - `GET  /api/gateways/{gatewayId}/ssids`
