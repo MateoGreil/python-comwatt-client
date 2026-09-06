@@ -151,6 +151,27 @@ updated" flags a health check wants.
   `END_USER`.
 - `GET  /api/gateways/{gatewayUid}/scan-modbus-ip?port={port}`
 
+> ⚠ **Two-ids trap (live-verified 2026-09-06).** The `{gatewayId}` path
+> segment above is **misleading**: the three sub-resource endpoints do
+> **not** all take the same id. A gateway has two ids — the numeric
+> primary key (`id`, e.g. `359`) and the opaque `gatewayUid` string
+> (e.g. `"BXCCBB77D9"`, also surfaced as `siteUid`-adjacent) — and the
+> endpoints split on them:
+>
+> | endpoint | takes | wrong id → |
+> | --- | --- | --- |
+> | `/api/gateways/{id}` (plain read) | numeric `id` | gatewayUid → Spring `400 Failed to convert 'gatewayId'` |
+> | `/api/gateways/{id}/network` | `gatewayUid` | numeric `id` → `412 gateway.not.found.for.fetching.network.details` (bare JSON array of Spring errors, **not** problem+json) |
+> | `/api/gateways/{id}/ssids` | numeric `id` | gatewayUid → `400 "Failed to convert 'gatewayId' with value: '...'"` (problem+json) |
+> | `/api/gateways/{id}/scan-modbus-ip` | `gatewayUid` | numeric `id` → `403` (empty body); the `gatewayUid` form actually triggers the Modbus scan (long-running) |
+>
+> So `/network` and `/scan-modbus-ip` want the **`gatewayUid`**, while
+> `/ssids` (and the plain `{gatewayId}` read) want the **numeric `id`**.
+> This is the third instance of the same trap as capacities (`id` vs
+> `capacityId`) and sites (`id` vs `siteUid`). The `{gatewayId}` placeholder
+> in the URL signatures above is kept for brevity; resolve it per endpoint
+> using the table.
+
 > ⚠ **Correction (2026-09-06).** `by-gateway-uid` was previously
 > documented as `403` for `END_USER` (admin-only). Not reproducible:
 > all three gateway reads return `200` on every gateway of the account
