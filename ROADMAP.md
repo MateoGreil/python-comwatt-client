@@ -16,7 +16,7 @@ against the live API before being relied upon.
 ## 1. Field-notes corrections (verified wrong or stale)
 
 - [x] **`aggregationLevel` does not accept `WEEK`.** Live: `400 Failed to convert 'aggregationLevel' with value: 'WEEK'` on all three aggregation endpoints. Real set: `NONE`, `HOUR`, `DAY`, `MONTH`, `YEAR`. → `aggregations.md` (l.59) and the `get_*_time_series` docstrings.
-- [ ] **`/api/electricitycontract/{id}`: the TODO is resolved.** The path param is the **site id**, the response is a **JSON array** (`[]` when the site has no contract), and no query param is involved. → `misc-endpoints.md`.
+- [x] **`/api/electricitycontract/{id}`: the TODO is resolved.** The path param is the **site id**, the response is a **JSON array** (`[]` when the site has no contract), and no query param is involved. → `misc-endpoints.md`.
 - [ ] **`/api/gateways/{…}/network` and `/ssids` take different ids** — a third instance of the "two ids" trap: `/ssids` needs the **numeric id** (a uid gives `400 Failed to convert 'gatewayId'`), while `/network` and `scan-modbus-ip` need the **`gatewayUid`** (a numeric id gives `412 gateway.not.found.for.fetching.network.details`). → `devices.md` + the gotchas list in `README.md`.
 
 ## 2. Field-notes additions
@@ -91,7 +91,7 @@ All verified `200` live. Ordered by value/effort.
 - [ ] `get_alert_configs(device_id)` — `{period, id, min, max, activated, deviceId}`; `period` observed: `SLIDING_24_HOURS`.
 - [ ] `get_thermal_control(device_id)` — `GET /api/thermalcontrol?deviceId={id}`: set-point / mode on thermostats and water heaters, `200` with an empty body on non-thermal devices. Still unverified end-to-end: no thermal/SG-Ready equipment on the probe site (re-checked 2026-08-15).
 - [ ] Gateway diagnostics — `get_gateway(id)`, `get_gateway_by_uid(uid)`, `get_gateway_network(gateway_uid)`, `get_gateway_ssids(gateway_id)`. Now `END_USER`-accessible; enables a "box offline / weak Wi-Fi" check. Mind the id/uid split (§1).
-- [ ] `get_electricity_contract(site_id)` and `get_electricity_contract_providers()`.
+- [x] `get_electricity_contract(site_id)` and `get_electricity_contract_providers()`.
 - [ ] Catalogues: `get_products()`, `get_timezones()`, `get_modbus_configurations()`.
 - [ ] `get_connected_object_devices(connected_object_id)`.
 

@@ -35,11 +35,30 @@
 - `GET /api/electricitycontract/providers` — flat list of provider names
   the app knows about (`EDF`, `TotalEnergies`, `Octopus`, `Mint`,
   `Ekwateur`, …).
-- `GET|PUT /api/electricitycontract/{id}` — the contract of a given site.
-  ⚠ **TODO:** the required query parameter has not been pinned down.
-  `?siteId=` returns 404; trailing-slash variants return 404; the bundle
-  builds the URL dynamically so the param name is opaque. Inspect the
-  Network tab in the SPA to confirm before relying on this endpoint.
+- `GET /api/electricitycontract/{id}` — the electricity contract(s) of a
+  given site. **Verified live 2026-09-06:** the path parameter is the
+  **numeric site id** (not the `siteUid`), **no query parameter** is
+  involved, and the response is a **JSON array** — `[]` when the site has
+  no contract. The earlier "required query parameter" TODO was a false
+  lead: the collection path `/api/electricitycontract?siteId=` simply has
+  no handler (404); the per-site contract lives at the `{id}` path segment.
+
+  ⚠ **Caveats.** The server does not 404 on an unknown id — on the probe
+  account both the `siteUid` and a bogus numeric id also return `200 []` —
+  so "site id" semantics rest on the SPA bundle (which builds the URL from
+  the numeric site id), not on server-side validation. The non-empty array
+  shape is **unverified**: the probe site carries no contract, so the item
+  keys shown below come from the SPA bundle, not a live response.
+
+  ```jsonc
+  // [] when the site has no contract; otherwise an array of contract
+  // objects (shape unverified live — no contract on the probe site):
+  [
+    { "id": 7, "provider": "EDF", "siteId": 3349 /* , … */ }
+  ]
+  ```
+- `PUT /api/electricitycontract/{id}` — update a site's contract. **Not
+  verified live** (write path; no consenting test contract to mutate).
 
 ## Catalogues
 
