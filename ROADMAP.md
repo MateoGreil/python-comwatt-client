@@ -93,6 +93,7 @@ All verified `200` live. Ordered by value/effort.
 - [ ] `get_device_capacities(device_id)`.
 - [ ] `get_plannings(site_id)` and `get_typical_days(site_id)` — paginated (`content`, `totalPages`, `paginationSize`). **Do not** offer the `?deviceId=` variant (500).
 - [ ] `get_alert_configs(device_id)` — `{period, id, min, max, activated, deviceId}`; `period` observed: `SLIDING_24_HOURS`.
+- [ ] `get_thermal_control(device_id)` — `GET /api/thermalcontrol?deviceId={id}`: set-point / mode on thermostats and water heaters, `200` with an empty body on non-thermal devices. Still unverified end-to-end: no thermal/SG-Ready equipment on the probe site (re-checked 2026-08-15).
 - [ ] Gateway diagnostics — `get_gateway(id)`, `get_gateway_by_uid(uid)`, `get_gateway_network(gateway_uid)`, `get_gateway_ssids(gateway_id)`. Now `END_USER`-accessible; enables a "box offline / weak Wi-Fi" check. Mind the id/uid split (§1).
 - [ ] `get_electricity_contract(site_id)` and `get_electricity_contract_providers()`.
 - [ ] Catalogues: `get_products()`, `get_timezones()`, `get_modbus_configurations()`.
@@ -104,6 +105,7 @@ All verified `200` live. Ordered by value/effort.
 - [ ] Handle the **412 + array-of-codes** error shape in `_response_detail` / `_api_error`, and surface the `code` (e.g. `user.already.activated`) instead of crashing on a list.
 - [ ] `stream_measurements`: send the literal text `__ping__` every **60 s** and `SEND /app/streaming/stop` on teardown, mirroring the SPA.
 - [ ] Align the docstring enums with §2.5 — drop `WEEK` from `aggregation_level`, document the `siteNetworkType` set including `CHARGE`/`DISCHARGE` for batteries.
+- [ ] No REST bulk endpoint for per-device series (repeated `id=` keeps only the **first** id — `aggregations.md`), so N devices still mean N calls. Add a small concurrent helper (thread pool over the sync session, mirroring the SPA's parallel `useQueries` fan-out) for batch-fetching device time series; the WebSocket stream remains the real answer for live values.
 
 ## 5. Client — write paths
 
@@ -120,6 +122,7 @@ Need a consenting test site; quirks in §2.6.
 - [ ] Create/update typical days, update a planning.
 - [ ] `set_alert_config(device_id, min, max, period, activated)`.
 - [ ] Confirm the `state` values for `set_pilot_wire` / `set_thermal_mode`, still unverified: no pilot-wire device was reachable, and every `selectValues` seen live was `null`.
+- [ ] Thermal-control write path (`PUT /api/thermalcontrol/{id}` — set-point / mode). Same blocker as the item above: no thermal device reachable, so request/response shapes are unconfirmed.
 
 ## Out of scope
 
