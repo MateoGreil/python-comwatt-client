@@ -221,8 +221,8 @@ bite implementors (two ids per site, `@ref` graphs, mandatory
 `aggregationLevel`, ...). They are best-effort and dated — verify anything
 load-bearing against the live API.
 
-[`ROADMAP.md`](ROADMAP.md) tracks what is still missing from both the notes and
-the client.
+What is still missing from both the notes and the client is tracked as
+[issues](https://git.greil.fr/mat/python-comwatt-client/issues).
 
 ## Contributing
 Contributions to the Comwatt Python Client are welcome! If you find any issues or have suggestions for improvement, please open an issue or submit a pull request on the GitHub repository.
