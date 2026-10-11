@@ -119,22 +119,67 @@ Sirene below.
 ### Siret (INSEE Sirene)
 
 - `GET /siret/{siret}` — INSEE Sirene company lookup (installer
-  onboarding). **Works unauthenticated** (verified live 2026-10-11 via
-  the error paths). Unlike the GeoNames proxies, errors pass through as
-  real HTTP statuses with the native INSEE error shape (French messages,
-  `header.statut`):
+  onboarding). **Works unauthenticated** (`200` success verified live
+  2026-10-11). Unlike the GeoNames proxies, validation/not-found errors
+  pass through as real HTTP statuses with the native INSEE error shape
+  (French messages, `header.statut`):
   - unknown but well-formed SIRET → `404`:
     `{"header":{"statut":404,"message":"Aucun élément trouvé pour le siret 12345678901234"}}`
   - malformed SIRET (not 14 digits) → `400`:
     `{"header":{"statut":400,"message":"Erreur de format de siret (abc) - Format attendu : 14 chiffres"}}`
 
-  ⚠ **Caveat — success shape unverified.** Lookups of **existing**
-  companies (La Poste `35600000000048`, Air France `55210055400013`)
-  consistently answered `429` with an **HTML** body (infra-style burst
-  limiter, `via: 1.1 google`) from the very first attempt on 2026-10-11,
-  while unknown/malformed SIRETs answered normally — so the success
-  body could not be captured. Capturing it is tracked in
-  [issue #120](https://git.greil.fr/mat/python-comwatt-client/issues/120).
+  Success returns the native INSEE envelope: `header` plus one
+  `etablissement`, not an array or a Comwatt company document. Abridged
+  shape captured live 2026-10-11; values below are illustrative and
+  anonymized, with additional fields omitted:
+
+  ```jsonc
+  {
+    "header": { "statut": 200, "message": "{message}" },
+    "etablissement": {
+      "siren": "{siren}", "nic": "{nic}", "siret": "{siret}",
+      "dateCreationEtablissement": "{date}",
+      "dateDernierTraitementEtablissement": "{timestamp}",
+      "etablissementSiege": false,
+      "uniteLegale": {
+        "denominationUniteLegale": "{companyName}",
+        "etatAdministratifUniteLegale": "{status}",
+        "categorieJuridiqueUniteLegale": "{code}",
+        "nomUniteLegale": null
+      },
+      "adresseEtablissement": {
+        "numeroVoieEtablissement": "{streetNumber}",
+        "typeVoieEtablissement": "{streetType}",
+        "libelleVoieEtablissement": "{streetName}",
+        "codePostalEtablissement": "{postalCode}",
+        "libelleCommuneEtablissement": "{city}",
+        "codeCommuneEtablissement": "{communeCode}"
+      },
+      "adresse2Etablissement": { "codePostal2Etablissement": null },
+      "periodesEtablissement": [
+        {
+          "dateDebut": "{date}", "dateFin": null,
+          "etatAdministratifEtablissement": "{status}",
+          "activitePrincipaleEtablissement": "{code}",
+          "nomenclatureActivitePrincipaleEtablissement": "{classification}",
+          "changementActivitePrincipaleEtablissement": false
+        }
+      ]
+    }
+  }
+  ```
+
+  Identifiers and address codes are **strings**, not integers. Many
+  fields (including personal-name fields, secondary-address fields and
+  `dateFin`) were `null` in the captured response; do not assume every
+  property is populated.
+
+  ⚠ **Caveat — `429` can be HTML.** Earlier existing-company lookups on
+  the same day returned `429` with an **HTML** body (`via: 1.1 google`)
+  from the first attempt, while unknown/malformed SIRETs answered
+  normally. A later single lookup succeeded with JSON. Do not treat the
+  earlier `429` as proof that success is unavailable, or assume every
+  error body follows the INSEE JSON shape.
 
 ## Tempo / tariff / grid forecast
 
