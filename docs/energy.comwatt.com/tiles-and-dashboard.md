@@ -38,6 +38,9 @@ This is the chattiness the GitHub issue #40 is complaining about.
 
 ## Other tile endpoints
 
+- `GET /api/tiles/{tileId}` — **405 Method Not Allowed**: there is no
+  read-by-id. Response carries `Allow: DELETE, PUT` and the standard
+  problem+json body (live-verified 2026-10-11).
 - `PUT /api/tiles/{tileId}` — update a tile (name, position, etc.)
 - `POST /api/tiles` — create
 - `DELETE /api/tiles/{tileId}` — remove
