@@ -12,9 +12,11 @@
    `Cookie: cwt_session=...`. The same cookie authenticates the
    WebSocket handshake at `wss://frontage.energy.comwatt.com/ws` (see
    [`websocket-realtime.md`](websocket-realtime.md)) — no extra token.
-4. **Detect expiry** — any endpoint returns `401` once the cookie is
-   rejected. The cheapest probe is `GET /api/users/authenticated`; treat
-   `401`/`403` as "re-login required".
+4. **Detect expiry** — the login response tells you up front when the session
+   dies: its `x-cwt-token` header is the expiry instant (login time + 2 h,
+   see [`x-cwt-token`](#x-cwt-token--session-expiry-instant)). Otherwise, any
+   endpoint returns `401` once the cookie is rejected. The cheapest probe is
+   `GET /api/users/authenticated`; treat `401`/`403` as "re-login required".
 5. **Logout** — `POST /api/v1/logout` invalidates the cookie server-side.
 
 ## Login
@@ -47,6 +49,15 @@ Response:
 - **200 OK**, empty body. The session is established via the `Set-Cookie`
   header.
 - **4xx** with an RFC-7807 `application/problem+json` body on failure.
+
+### `x-cwt-token` — session expiry instant
+
+Despite the name, the `x-cwt-token: <ISO-8601 instant>` response header is
+not a token: it carries the **session expiry instant**, login time +
+**exactly 2 h** (observed twice, to the second). It is sent **only** on the
+`POST /api/v1/authent` response — ordinary `GET`s do not repeat it — so the
+session lifetime is knowable up front instead of being discovered via a
+`401`.
 
 ## The session cookie
 
