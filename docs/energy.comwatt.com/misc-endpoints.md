@@ -240,8 +240,11 @@ full list (`/api/connectedobjects?siteId=`, `?gatewayUid=`, by-id, etc.).
   > plannings, while the same query without the slash returns `200`
   > with its plannings. There is no "404 on empty list" behaviour.
 
-- `GET /api/plannings/configurationModes?deviceId={deviceId}` — the legal
-  configuration modes for a device (e.g. `["MANUAL"]`).
+- `GET /api/plannings/configuration-modes?deviceId={deviceId}` — the legal
+  configuration modes for a device: `["MANUAL"]` on every device tested
+  (4 devices, live-verified 2026-10-11). The bundle now spells it
+  **kebab-case**; the older camelCase `configurationModes` still answers
+  `200` — Spring accepts both.
 - `POST /api/plannings` — create.
 - `GET|PUT|DELETE /api/plannings/{planningId}`
 
