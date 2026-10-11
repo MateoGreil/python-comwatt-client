@@ -77,9 +77,18 @@ A capacity has **two** ids — easy to confuse:
   [`websocket-realtime.md`](websocket-realtime.md)) and the right key for
   mapping `WS frame → entity`.
 
+For one device's capacities without walking the `@ref` graph, use
+`GET /api/devices/{id}/capacities` ([Single device](#single-device)):
+the site-wide listing deduplicates repeated entities (devices,
+capacities) into fastjson `@ref` pointers, while the dedicated endpoint
+always returns full objects.
+
 ## Single device
 
 - `GET  /api/devices/{deviceId}` — full device document.
+- `GET  /api/devices/{deviceId}/capacities` — **200**, this device's
+  capacities as an array of full objects — no `@ref` indirection to
+  resolve (live-verified 2026-10-11).
 - `PUT  /api/devices/{deviceId}` — update device (name, configuration, etc.).
   Already wrapped by `ComwattClient.put_device`.
 - `PUT  /api/devices/{deviceId}?autoset=true` — same with the autoset flag.
