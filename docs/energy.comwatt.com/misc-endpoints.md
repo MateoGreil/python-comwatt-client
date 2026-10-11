@@ -201,10 +201,29 @@ Sirene below.
 - `GET /api/devicekinds/by-site-uid/{siteUid}` — device-kind catalogue for
   the site (47 items on test). See [`devices.md`](devices.md).
 - `GET /api/util/timezones` — static list of `{timeZone, posix}` pairs.
-- `GET /api/iot-platforms` — list of IoT platforms (used internally).
+- `GET /api/iot-platforms` — list of IoT platforms (used internally);
+  entries are `{id, name, integrated}` (1 on test, live-verified
+  2026-10-11).
+- `GET /api/iot-platforms/{id}` — **200**, but a **different view** than
+  the list entry: `{authorizeMethod, authorizeUrl}` (authorize info for
+  the platform), not the platform record (live-verified 2026-10-11).
+- `DELETE /api/iot-platforms/{id}` — delete a platform (bundle, not
+  exercised).
+- `POST /api/iot-platforms/{id}/import-resources-to-site?siteUid={uid}` —
+  import a platform's resources into a site (installer flow, bundle, not
+  exercised).
 - `GET /api/products` — Comwatt hardware catalogue
   (`MONITOR_GEN_4`, `POWER_GEN_4`, …).
-- `GET /api/products/{id}` — single product.
+- `GET /api/products/{id}` — **200**, same shape as the list entry
+  (live-verified 2026-10-11):
+
+  ```jsonc
+  {
+    "id": 8, "name": "MONITOR_GEN_4", "brand": "COMWATT",
+    "cardinality": 0,
+    "features": [ { "id": 5, "code": "PLANNING", "featureName": "PLANNING" }, … ]
+  }
+  ```
 
 ## Companies (installers)
 
