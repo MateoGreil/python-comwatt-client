@@ -88,8 +88,8 @@ A capacity has **two** ids — easy to confuse:
 - `PUT  /api/devices/{deviceId}/reverse_grid_meter`
 - `POST /api/devices/{deviceId}/connected_object`
 - `DELETE /api/devices/{deviceId}/remove`
-- `POST /api/devices/v2/modbus` — pair a Modbus device (installer flow).
-- `*    /api/devices/v2/modbus` — Modbus device sub-API.
+- `POST /api/devices/v2/modbus` — pair a Modbus device (installer flow;
+  see [Modbus group](#modbus-group)).
 
 ## Device kinds (catalogue)
 
@@ -119,6 +119,7 @@ Broader than `/api/devices` — it also surfaces gateway-level entries.
 - `GET  /api/connectedobjects/{connectedObjectId}`
 - `GET  /api/connectedobjects/{connectedObjectId}/devices`
 - `GET  /api/connectedobjects/{connectedObjectId}/modbus-expert`
+  (see [Modbus group](#modbus-group))
 - `POST /api/connectedobjects/` — pair a new connected object.
 
 ## Gateways
@@ -150,6 +151,7 @@ updated" flags a health check wants.
 - `GET  /api/gateways/by-gateway-uid/{GATEWAY_UID}` — `200` for
   `END_USER`.
 - `GET  /api/gateways/{gatewayUid}/scan-modbus-ip?port={port}`
+  (see [Modbus group](#modbus-group))
 
 > ⚠ **Two-ids trap (live-verified 2026-09-06).** The `{gatewayId}` path
 > segment above is **misleading**: the three sub-resource endpoints do
@@ -178,3 +180,60 @@ updated" flags a health check wants.
 > with a plain `END_USER` session. Either the role check was lifted
 > server-side since the last pass, or those earlier probes hit another
 > role boundary.
+
+## Modbus group
+
+One JS module in the SPA bundle, spanning devices, gateways and connected
+objects. Modbus is installer-world: on a plain `END_USER` account most of
+the group is only observable through its error behaviour (2026-08-15
+recon; live re-probe 2026-10-11 on an account whose objects are all
+`AZUREIOT`).
+
+- `POST /api/devices/v2/modbus` — pair a Modbus device (installer flow;
+  bundle only, not live-probed). The bundle also references a
+  `* /api/devices/v2/modbus` sub-API.
+- `GET /api/gateways/modbus-configurations` — **200**, the Modbus catalogue
+  (live-verified 2026-10-11: 4 entries). Entry shape:
+
+  ```json
+  {
+    "id": 1,
+    "name": "huawei",
+    "label": "Huaweï Sun2000 nKTL",
+    "port": 502,
+    "slave": 1,
+    "device_kinds": ["SOLAR_PANEL", "BATTERY", "GRID_METER"]
+  }
+  ```
+
+- `GET /api/gateways/{gatewayUid}/scan-modbus-ip?port={port}` — triggers an
+  actual Modbus scan on the gateway. Long-running: nginx cuts it with a
+  **504 after ~60 s**. Takes the `gatewayUid` (see the two-ids trap
+  above).
+- `GET|POST /api/connectedobjects/{id}/modbus-expert` — Modbus expert
+  parameters of a connected object.
+- `GET /api/connectedobjects/{id}/state-history` — Modbus state history.
+
+The last two are **Modbus-only**: on a connected object without a Modbus
+configuration (every `AZUREIOT` object) both return **`404`** — in the
+bare-array error format, not problem+json (live-verified 2026-10-11; see
+[error conventions](README.md#error--status-code-conventions)):
+
+```json
+[
+  {
+    "codes": [
+      "No Modbus configuration associated with ConnectedObject id: {id}"
+    ],
+    "arguments": [],
+    "defaultMessage": null,
+    "objectName": "",
+    "field": "",
+    "code": "No Modbus configuration associated with ConnectedObject id: {id}"
+  }
+]
+```
+
+The message echoes the path id, and the entry carries a `field` key on top
+of the shape documented in the error conventions. `POST modbus-expert` is
+a write path and was not live-probed.
