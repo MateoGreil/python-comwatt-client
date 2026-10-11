@@ -45,9 +45,36 @@ Both ids exist in the response, so the client can pick whichever it needs.
 Referenced by the SPA but returns **403** for a normal end-user. Likely an
 installer/admin-only endpoint.
 
+## Site administration
+
+Single-site reads live-verified 2026-10-11; write paths from the SPA
+bundle, not exercised.
+
+- `GET  /api/sites/{id}` — **200**, the single site; same key set as the
+  entries of `GET /api/sites` (nested values can differ).
+- `GET  /api/sites/by-site-uid/{siteUid}` — **200**; payload identical to
+  `GET /api/sites/{id}` (compared live 2026-10-11).
+- `GET  /api/sites/{siteId}/gateways/{gatewayUid}` — one gateway of the
+  site.
+- `PUT  /api/sites/{id}/gateways/{gatewayUid}` — assign that gateway to
+  the site (installer flow).
+- `PUT  /api/sites/{siteUid}/reloadConnexionStatus` — ask the site's
+  gateway(s) to re-report their connection status. Mind the id: this one
+  takes the **`siteUid`**, not the numeric `id` (same trap family as the
+  gateway two-ids table in [`devices.md`](devices.md#gateways)).
+- `PUT  /api/sites/{id}/send-installation-progress` — installer
+  installation-progress notification.
+- `POST /api/sites/transfer/installForUser` — initiate a site transfer to
+  another user.
+- `GET  /api/sites/transfer/{id}/target-user-information` — target user
+  of a pending transfer. **404** outside a pending transfer
+  (live-verified 2026-10-11) — body is the bare-array format, but
+  degenerate: a single entry with `codes: []` and `code: null`, no
+  message at all (see
+  [error conventions](README.md#error--status-code-conventions)).
+
 ## Other site-scoped endpoints (referenced from the bundle)
 
-- `GET  /api/sites/{siteId}/gateways/{gatewayUid}`
 - `GET  /api/sites/{siteId}/gateway-addability?gatewayUid={GATEWAY_UID}`
 - `POST /api/sites/add`, `POST /api/sites/add/installer`,
   `POST /api/sites/add/installer/devices`,
