@@ -14,6 +14,16 @@
       "commitMessagePrefix": "📌"
     }
   ],
+  "regexManagers": [
+    {
+      "description": "Track setuptools in pyproject.toml build-system (no native manager covers [build-system] requires)",
+      "fileMatch": ["(^|/)pyproject\\.toml$"],
+      "matchStrings": ["requires\\s*=\\s*\\[\"(?<depName>setuptools)>=(?<currentValue>[^\"]+)\"\\]"],
+      "datasourceTemplate": "pypi",
+      "versioningTemplate": "pep440",
+      "autoReplaceStringTemplate": "requires = [\"{{{depName}}}>={{{newValue}}}\"]"
+    }
+  ],
   "vulnerabilityAlerts": {
     "commitMessagePrefix": "🔒️"
   }
