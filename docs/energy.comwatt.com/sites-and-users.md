@@ -56,7 +56,32 @@ installer/admin-only endpoint.
 ## Users
 
 - `GET  /api/users/authenticated` (see [`auth.md`](auth.md))
-- `*    /api/users` and sub-resources (referenced; not exercised here — likely
-  used for profile editing)
 - `GET  /api/delegatedaccess`, `* /api/delegatedaccess/{id}` — delegated access
   management between accounts (e.g. installer ↔ end-user).
+
+### Account lifecycle (`/api/users`)
+
+From the SPA bundle (2026-09 re-exploration); reads live-verified 2026-10-11,
+write paths not exercised.
+
+- `POST /api/users/` — register a new account.
+- `PUT  /api/users/{id}` / `DELETE /api/users/{id}` — update / delete the
+  account.
+- `PUT  /api/users/{id}/updateemail` — change the account email.
+- `POST /api/users/{email}/forgottenpasswd` — send the password-reset mail.
+- `PUT  /api/users/{email}/forgottenpasswd/{token}` — complete the reset;
+  body `{"password": <salted sha256>}` (same hash recipe as login, see
+  [`auth.md`](auth.md)).
+- `PUT  /api/users/{email}/token/{token}` — activation, token from the
+  activation mail.
+- `GET  /api/users/{email}/isReadyForSiteInstallation` — installer-side
+  check; `403` for `END_USER` (live-verified 2026-10-11), body in the
+  bare-array error format with `not authorized` (see
+  [error conventions](README.md#error--status-code-conventions)).
+
+> ⚠ **`GET /api/users/{id}/refreshtoken` is not a session refresh.** It
+> re-sends the **activation mail**. On an already-activated account it
+> fails with `412` + bare array `user.already.activated` (live-verified
+> 2026-10-11 — the canonical example in the
+> [error conventions](README.md#error--status-code-conventions)). Nothing
+> here extends the `cwt_session` cookie; its lifetime is fixed at login.

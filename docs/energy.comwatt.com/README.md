@@ -66,7 +66,7 @@ broker leaking other tenants' data on wildcard subscriptions.
 | File | What's in it |
 | --- | --- |
 | [`auth.md`](auth.md) | Login, logout, the password-hash scheme, the `cwt_session` JWE. |
-| [`sites-and-users.md`](sites-and-users.md) | `/api/users/authenticated`, `/api/sites`, site profile, delegated access. |
+| [`sites-and-users.md`](sites-and-users.md) | `/api/users/authenticated`, account lifecycle (`/api/users`), `/api/sites`, site profile, delegated access. |
 | [`devices.md`](devices.md) | `/api/devices`, `/api/connectedobjects`, device kinds, capacities (sensors / relays). |
 | [`measurekeys.md`](measurekeys.md) | `/api/measurekeys/measurekeys` — the per-site measure inventory. |
 | [`aggregations.md`](aggregations.md) | The time-series API (per-device, per-site-network, whole-site, top-consumption) — **read this for issue #40**. |
@@ -128,8 +128,9 @@ Spring Boot RFC-7807 problem+json shape on errors:
 
 Some endpoints also return a **second error format**: a bare JSON array of
 Spring validation errors — no `application/problem+json` wrapper. First
-seen with HTTP `412`; not tied to that status — `404` + array is served by
-the Modbus-only endpoints too (live-verified 2026-10-11):
+seen with HTTP `412`; not tied to that status — also observed with `404`
+(Modbus-only endpoints) and `403` (`not authorized`), live-verified
+2026-10-11:
 
 ```json
 [
@@ -146,7 +147,9 @@ the Modbus-only endpoints too (live-verified 2026-10-11):
 Observed with `412` on `users/{id}/refreshtoken`, `gateways/{id}/network`
 and `companies/installation-company-by-installer-email`; with `404` on
 `connectedobjects/{id}/modbus-expert` and `state-history` (object without a
-Modbus configuration — see [Modbus group](devices.md#modbus-group)). The
+Modbus configuration — see [Modbus group](devices.md#modbus-group)); with
+`403` on `users/{email}/isReadyForSiteInstallation` (`not authorized`;
+`arguments`/`field` are `null` there, not empty). The
 useful field is `code` (mirrored in `codes`); it is not always a symbolic
 code — the Modbus `404`s put the full human-readable message there, and
 entries may carry an extra `field` key. Hazard: anything assuming the
