@@ -131,6 +131,14 @@ Broader than `/api/devices` — it also surfaces gateway-level entries.
   (see [Modbus group](#modbus-group))
 - `POST /api/connectedobjects/` — pair a new connected object.
 
+> ⚠ **The physical pairing is browser-only (Web Bluetooth).** The SPA
+> performs the BLE handshake via `navigator.bluetooth` (service UUID
+> `00001000-1d55-54e2-83ec-2a4453c26896`), over the bundle entities
+> `bluetooth_connected_object` / `scanned_access_point` (2026-09 bundle
+> re-exploration — not live-verifiable from an HTTP client). There is **no
+> HTTP pairing endpoint** to hunt for: the `POST` above only creates the
+> server-side record; a plain HTTP client cannot reach the BLE step.
+
 ## Gateways
 
 The Comwatt box itself (the `OCTOPUS_*` IoT gateway).
