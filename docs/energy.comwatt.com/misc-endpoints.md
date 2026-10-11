@@ -268,6 +268,46 @@ full list (`/api/connectedobjects?siteId=`, `?gatewayUid=`, by-id, etc.).
 
 ## Plannings / schedules
 
+### Observed planning fields
+
+Read-only re-verification on 2026-10-11: a planning carries `id`,
+`device`, `isDefault` (boolean), `status` (`OK` observed) and
+`typicalDaySchedules`. Within each schedule:
+
+- `activeDayMask` is a weekday bitmask; `127` means all seven days.
+  The bit-to-weekday ordering was not verified.
+- `startDate` / `endDate` are date strings (`YYYY-MM-DD`); the response
+  also carries `isActive` and `isDefault` flags.
+- `optimalPlanning: true` marks generated schedules. Their inline
+  `typicalDay` also carries this flag and labels matching
+  `TD-ML-{n}-Dev-{deviceId}` (observed live, real ids omitted).
+- `typicalDay` contains `id`, `label`, `isDefault` and
+  `timeRangeConfigurations` (time ranges with `startTime`, `endTime`,
+  `mode`). It can participate in the response's `@id` / `@ref` graph.
+
+### Planning write-path quirks (second-hand)
+
+These contracts are reported by the Kotlin client
+[solareco](https://github.com/paulthvt/solareco/tree/b7534c6a7195351c94948326cd3b0fa9ad1723e0),
+not verified against the live API here. The source's `PlanningDto.kt`
+and `PlanningRebuilder.kt` describe the following pitfalls:
+
+- `PUT /api/plannings/{id}` requires an inline `device` object with
+  `"@class": "Device"` and a numeric `id`; without the discriminator it
+  reportedly returns `400 "Failed to read request"`. Do not assume a
+  GET response can be sent back unchanged.
+- Each schedule's `typicalDay` must be a **full inline object**, not
+  merely an id reference; id-only input reportedly returns `500`.
+- The PUT **replaces** `typicalDaySchedules` wholesale rather than
+  patching it: omitted user schedules are deleted, and schedule ids
+  are reassigned. Include every surviving user schedule and re-read
+  after a write; an accidentally empty list can wipe the user planning.
+- Schedules with `optimalPlanning: true` are **server-managed**:
+  exclude them from the write body rather than round-tripping them.
+  The source reports that the server re-attaches its own generated rows.
+
+### Endpoints
+
 - `GET /api/plannings?deviceId={deviceId}` — paginated plannings for a
   device. `200` on every device tested (re-verified 2026-09-06: 19
   devices, 13 kinds); `content` empty for most — on the probe account
@@ -316,6 +356,12 @@ endpoint (`MANUAL`); no write-based enum validation was performed.
   the auto-consumption optimizer (see [Planning modes](#planning-modes)).
 - `POST /api/typicaldays?siteId={siteId}` — create.
 - `GET|PUT|DELETE /api/typicaldays/{id}`
+
+For typical-day creation, `siteId` belongs in the **query string**, not
+in the JSON body (second-hand from solareco's
+`ComwattApi.createTypicalDay`, same revision linked above; not live-tested
+here). The source reports `400 "Required parameter 'siteId' is not present."`
+when only a body field is supplied.
 
 ## Alerts
 
