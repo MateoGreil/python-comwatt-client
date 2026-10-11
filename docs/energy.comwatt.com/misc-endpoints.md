@@ -1,5 +1,61 @@
 # Misc endpoints
 
+## Weather (OpenWeatherMap proxy)
+
+The same origin also proxies third-party services under non-`/api` paths,
+with no Comwatt API key of our own: OpenWeatherMap (below), GeoNames
+(`/geocode`, `/timezone`) and INSEE Sirene (`/siret/{siret}`) are not yet
+documented here.
+
+- `GET /weather/data/2.5/forecast/` — OpenWeatherMap 5-day / 3-hour
+  forecast. **Works unauthenticated** (verified live 2026-10-11); drives
+  the dashboard weather tile. OWM query semantics:
+  - `q={city},{cc}` or `zip={zip},{cc}` — location; e.g. `q=Paris,fr`,
+    `zip=33000,fr` → Bordeaux. Unknown city → `404` with the OWM JSON
+    error `{"cod":"404","message":"city not found"}` (verified live).
+  - `units=metric|imperial` and `lang=fr` (localized
+    `weather[].description`, e.g. `"couvert"`).
+  - Trailing slash optional: `/forecast/` and `/forecast` both answer
+    `200` — the initial field note requiring the slash was wrong.
+
+  Full OWM shape, `cnt` = 40 entries (captured live 2026-10-11):
+
+  ```jsonc
+  {
+    "cod": "200", "message": 0, "cnt": 40,
+    "list": [
+      {
+        "dt": 1791720000, "dt_txt": "2026-10-11 12:00:00",
+        "main": { "temp": 14.96, "feels_like": 14.34,
+                  "temp_min": 14.96, "temp_max": 15.99,
+                  "pressure": 1016, "sea_level": 1016,
+                  "grnd_level": 1007, "humidity": 70,
+                  "temp_kf": -1.03, "dew_point": 9.54 },
+        "weather": [ { "id": 804, "main": "Clouds",
+                       "description": "couvert", "icon": "04d" } ],
+        "clouds": { "all": 100 },
+        "wind": { "speed": 3.63, "deg": 273, "gust": 8.79 },
+        "visibility": 10000,
+        "pop": 0,
+        "sys": { "pod": "d" }
+      }
+      // … 39 more entries, one per 3 h slot
+    ],
+    "city": {
+      "id": 2988507, "name": "Paris",
+      "coord": { "lat": 48.8534, "lon": 2.3488 },
+      "country": "FR", "population": 2138551, "timezone": 7200,
+      "sunrise": 1791698661, "sunset": 1791738607
+    }
+  }
+  ```
+
+  ⚠ **Caveat — burst rate limiter.** A burst of consecutive calls trips
+  an infrastructure-level `429 Too Many Requests` whose body is **HTML**
+  (not OWM's JSON error shape — `via: 1.1 google` on the response), so
+  don't parse errors as JSON unconditionally. Observed live 2026-10-11;
+  clears within seconds.
+
 ## Tempo / tariff / grid forecast
 
 - `GET /api/electricityprice?siteId={siteId}` — EDF Tempo calendar + current
