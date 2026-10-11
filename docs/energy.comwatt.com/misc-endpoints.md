@@ -205,8 +205,42 @@ Sirene below.
 - `GET /api/products` — Comwatt hardware catalogue
   (`MONITOR_GEN_4`, `POWER_GEN_4`, …).
 - `GET /api/products/{id}` — single product.
-- `GET /api/companies` — requires an `id` or similar (returned 400 with no
-  query).
+
+## Companies (installers)
+
+The installer/company surface. Reads live-verified 2026-10-11 with a
+plain `END_USER` session; `POST`s are write paths from the bundle, not
+exercised. Bare `GET /api/companies` without a query still returns `400`.
+
+- `GET /api/companies?registrationNumber={siret}` — **200**, list of
+  companies matching the SIRET. Company shape (live, `id` `1` is
+  Comwatt's own entry):
+
+  ```jsonc
+  {
+    "id": 1, "@id": "1", "name": "COMWATT",
+    "registrationNumber": "79831198100020",   // the SIRET
+    "isInstallationCompany": …, "isSalesCompany": …,
+    "mainBusiness": …, "comment": …,
+    "address": { address, postalCode, city, country },
+    "businessManagerName": …, "businessManagerPhone": {…},
+    "businessManagerEmail": …,
+    "createDate": …, "updateDate": …
+  }
+  ```
+
+- `GET /api/companies/installation-company-by-installer-email?installerEmail={email}`
+  — the installation company of an installer. For an email that is not an
+  installer account: `412` + bare array with code `user.not.installer`
+  (live-verified 2026-10-11; see
+  [error conventions](README.md#error--status-code-conventions)).
+- `GET /api/companies/{id}/associated-sales-companies` — **200** even for
+  `END_USER` (live-verified 2026-10-11); array of companies in the same
+  shape as above.
+- `POST /api/companies/{id}/enable-sales-business` /
+  `POST /api/companies/{id}/enable-installation-business` — toggle a
+  company's sales / installation business flag (installer/admin flow,
+  not exercised).
 
 ## Connected objects
 
