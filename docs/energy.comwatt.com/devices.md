@@ -161,7 +161,7 @@ updated" flags a health check wants.
 > | endpoint | takes | wrong id → |
 > | --- | --- | --- |
 > | `/api/gateways/{id}` (plain read) | numeric `id` | gatewayUid → Spring `400 Failed to convert 'gatewayId'` |
-> | `/api/gateways/{id}/network` | `gatewayUid` | numeric `id` → `412 gateway.not.found.for.fetching.network.details` (bare JSON array of Spring errors, **not** problem+json) |
+> | `/api/gateways/{id}/network` | `gatewayUid` | numeric `id` → `412 gateway.not.found.for.fetching.network.details` (bare JSON array of Spring errors, **not** problem+json — see [error conventions](README.md#error--status-code-conventions)) |
 > | `/api/gateways/{id}/ssids` | numeric `id` | gatewayUid → `400 "Failed to convert 'gatewayId' with value: '...'"` (problem+json) |
 > | `/api/gateways/{id}/scan-modbus-ip` | `gatewayUid` | numeric `id` → `403` (empty body); the `gatewayUid` form actually triggers the Modbus scan (long-running) |
 >

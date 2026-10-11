@@ -126,6 +126,28 @@ Spring Boot RFC-7807 problem+json shape on errors:
 }
 ```
 
+Some endpoints also return a **second error format**: HTTP `412` with a bare
+JSON array of Spring validation errors — no `application/problem+json`
+wrapper:
+
+```json
+[
+  {
+    "codes": ["user.already.activated"],
+    "arguments": [],
+    "defaultMessage": null,
+    "objectName": "",
+    "code": "user.already.activated"
+  }
+]
+```
+
+Observed on `users/{id}/refreshtoken`, `gateways/{id}/network` and
+`companies/installation-company-by-installer-email`. The useful field is
+`code` (mirrored in `codes`). Hazard: anything assuming the RFC-7807 dict
+shape (e.g. `problem["detail"]`) breaks on these responses — the body is a
+**list**.
+
 Typical codes observed:
 
 - `200` — success (JSON body; sometimes empty string for no-content).
@@ -136,3 +158,5 @@ Typical codes observed:
   `/plannings/?siteId=` variant, which misses every controller mapping
   and falls through to the static handler (`No static resource
   api/plannings.`); without the slash the same query returns `200`.
+- `412` — validation failure as a bare JSON array of Spring validation
+  errors (**not** problem+json — see above).
