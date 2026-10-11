@@ -126,9 +126,10 @@ Spring Boot RFC-7807 problem+json shape on errors:
 }
 ```
 
-Some endpoints also return a **second error format**: HTTP `412` with a bare
-JSON array of Spring validation errors — no `application/problem+json`
-wrapper:
+Some endpoints also return a **second error format**: a bare JSON array of
+Spring validation errors — no `application/problem+json` wrapper. First
+seen with HTTP `412`; not tied to that status — `404` + array is served by
+the Modbus-only endpoints too (live-verified 2026-10-11):
 
 ```json
 [
@@ -142,11 +143,15 @@ wrapper:
 ]
 ```
 
-Observed on `users/{id}/refreshtoken`, `gateways/{id}/network` and
-`companies/installation-company-by-installer-email`. The useful field is
-`code` (mirrored in `codes`). Hazard: anything assuming the RFC-7807 dict
-shape (e.g. `problem["detail"]`) breaks on these responses — the body is a
-**list**.
+Observed with `412` on `users/{id}/refreshtoken`, `gateways/{id}/network`
+and `companies/installation-company-by-installer-email`; with `404` on
+`connectedobjects/{id}/modbus-expert` and `state-history` (object without a
+Modbus configuration — see [Modbus group](devices.md#modbus-group)). The
+useful field is `code` (mirrored in `codes`); it is not always a symbolic
+code — the Modbus `404`s put the full human-readable message there, and
+entries may carry an extra `field` key. Hazard: anything assuming the
+RFC-7807 dict shape (e.g. `problem["detail"]`) breaks on these responses —
+the body is a **list**.
 
 Typical codes observed:
 
@@ -158,5 +163,7 @@ Typical codes observed:
   `/plannings/?siteId=` variant, which misses every controller mapping
   and falls through to the static handler (`No static resource
   api/plannings.`); without the slash the same query returns `200`.
+  Also served **with the bare-array body** on Modbus-only endpoints (see
+  above).
 - `412` — validation failure as a bare JSON array of Spring validation
   errors (**not** problem+json — see above).
