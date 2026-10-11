@@ -3,8 +3,8 @@
 ## Non-/api proxies
 
 The same origin also proxies third-party services under non-`/api` paths,
-with no Comwatt API key of our own — OpenWeatherMap and GeoNames below.
-INSEE Sirene (`/siret/{siret}`) is not yet documented here.
+with no Comwatt API key of our own — OpenWeatherMap, GeoNames and INSEE
+Sirene below.
 
 ### Weather (OpenWeatherMap)
 
@@ -115,6 +115,26 @@ INSEE Sirene (`/siret/{siret}`) is not yet documented here.
   out-of-range coords → `{"status":{"message":"invalid lat/lng","value":14}}`
   (both verified live). Check for `timezoneId` — or a `status` key — before
   consuming the response.
+
+### Siret (INSEE Sirene)
+
+- `GET /siret/{siret}` — INSEE Sirene company lookup (installer
+  onboarding). **Works unauthenticated** (verified live 2026-10-11 via
+  the error paths). Unlike the GeoNames proxies, errors pass through as
+  real HTTP statuses with the native INSEE error shape (French messages,
+  `header.statut`):
+  - unknown but well-formed SIRET → `404`:
+    `{"header":{"statut":404,"message":"Aucun élément trouvé pour le siret 12345678901234"}}`
+  - malformed SIRET (not 14 digits) → `400`:
+    `{"header":{"statut":400,"message":"Erreur de format de siret (abc) - Format attendu : 14 chiffres"}}`
+
+  ⚠ **Caveat — success shape unverified.** Lookups of **existing**
+  companies (La Poste `35600000000048`, Air France `55210055400013`)
+  consistently answered `429` with an **HTML** body (infra-style burst
+  limiter, `via: 1.1 google`) from the very first attempt on 2026-10-11,
+  while unknown/malformed SIRETs answered normally — so the success
+  body could not be captured. Capturing it is tracked in
+  [issue #120](https://git.greil.fr/mat/python-comwatt-client/issues/120).
 
 ## Tempo / tariff / grid forecast
 
