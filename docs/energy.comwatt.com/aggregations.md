@@ -56,11 +56,14 @@ Take-aways from the helper:
 | Param | Values seen |
 |---|---|
 | `measureKind` | `FLOW` (instantaneous power, W), `QUANTITY` (energy, Wh), `STATE` (relay/contactor on/off), `VALUE` (e.g. temperature °C), `INDEX` (cumulative meter index), `RATE` (ratio, e.g. self-consumption %). Live-pinned 2026-10-11 by sweeping `time-series` until `400`: all six return `200`; `POWER`, `TEMPERATURE`, `ENERGY`, `VOLTAGE`, `CURRENT`, `PERCENT`, `ALL` and `NONE` are rejected with `400 "Failed to convert 'measureKind' with value: …"` |
-| `aggregationLevel` | `NONE`, `HOUR`, `DAY`, `MONTH`, `YEAR` (live-verified `200` on all five aggregation endpoints; `WEEK` is rejected with `400 "Failed to convert 'aggregationLevel' with value: 'WEEK'"`). The SPA's `scale` maps to it: `HOUR→NONE`, `WEEK→HOUR`, `MONTH→DAY`, `YEAR→MONTH` — the SPA never sends `aggregationLevel=WEEK`. |
-| `aggregationType` | `NONE`, `MIN`, `MAX`, `SUM`, `AVERAGE` |
-| `siteNetworkType` | `CONSUMPTION`, `INJECTION`, `WITHDRAWAL`, `PRODUCTION` (all live-verified `200`). `BATTERY` is **rejected** (`400 "Failed to convert 'siteNetworkType' with value: 'BATTERY'"`) despite `site-time-series` exposing `charges`/`discharges` — there is no battery `siteNetworkType`. |
-| `timeAgoUnit` | `HOUR`, `DAY`, `WEEK`, `MONTH`, `YEAR` (`WEEK` **is** valid here, unlike `aggregationLevel`; `NONE` is rejected) |
+| `aggregationLevel` | `NONE`, `HOUR`, `DAY`, `MONTH`, `YEAR` (all return `200` on `time-series`, re-verified 2026-10-11). `WEEK`, `MINUTE`, `QUARTER` and `TEN_MINUTES` are rejected with `400`, e.g. `"Failed to convert 'aggregationLevel' with value: 'WEEK'"`. The SPA's `scale` maps to it: `HOUR→NONE`, `WEEK→HOUR`, `MONTH→DAY`, `YEAR→MONTH` — the SPA never sends `aggregationLevel=WEEK`. |
+| `aggregationType` | `NONE`, `MIN`, `MAX`, `SUM`, `AVERAGE` (all return `200` on `time-series`, live-verified 2026-10-11). `AVG`, `FIRST`, `LAST`, `COUNT` and `MEDIAN` are rejected with `400`, e.g. `"Failed to convert 'aggregationType' with value: 'AVG'"`. |
+| `siteNetworkType` | `PRODUCTION`, `CONSUMPTION`, `INJECTION`, `WITHDRAWAL`, `CHARGE`, `DISCHARGE` (all return `200` on the site-addressed `time-series` overload, live-verified 2026-10-11). `CHARGE` / `DISCHARGE` select battery flows. `BATTERY` and `GRID` are rejected with `400`, e.g. `"Failed to convert 'siteNetworkType' with value: 'BATTERY'"`; use the directional battery values, not `BATTERY`. |
+| `timeAgoUnit` | `HOUR`, `DAY`, `WEEK`, `MONTH`, `YEAR` (all return `200` on `time-series`, live-verified 2026-10-11). `WEEK` **is** valid here, unlike `aggregationLevel`; `MINUTE` and `NONE` are rejected with `400`, e.g. `"Failed to convert 'timeAgoUnit' with value: 'MINUTE'"`. |
 | `timeAgoValue` | integer as a string, default `"1"` |
+
+These sweeps validate parameter acceptance, not the availability of data
+for every device or site.
 
 ## 1. `GET /api/aggregations/time-series`
 
