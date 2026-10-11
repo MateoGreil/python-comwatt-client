@@ -301,11 +301,19 @@ full list (`/api/connectedobjects?siteId=`, `?gatewayUid=`, by-id, etc.).
 - `POST /api/plannings` — create.
 - `GET|PUT|DELETE /api/plannings/{planningId}`
 
+### Planning modes
+
+The time-range `mode` values are `ON`, `OFF` and `COMWATT` (solar-driven).
+All three were observed in `typicalDay.timeRangeConfigurations[].mode`
+inside planning schedules and in the typical-day catalogue (read-only,
+2026-10-11). This is separate from the device's `configuration-modes`
+endpoint (`MANUAL`); no write-based enum validation was performed.
+
 ## Typical days
 
 - `GET /api/typicaldays?siteId={siteId}` — paginated list of "typical day"
-  templates: time-range + mode (ON/OFF/AUTO/…) rows that drive the
-  auto-consumption optimizer.
+  templates: time ranges with `ON` / `OFF` / `COMWATT` modes that drive
+  the auto-consumption optimizer (see [Planning modes](#planning-modes)).
 - `POST /api/typicaldays?siteId={siteId}` — create.
 - `GET|PUT|DELETE /api/typicaldays/{id}`
 

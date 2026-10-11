@@ -48,7 +48,7 @@ clamp, a relay, a pilot wire, a thermostat, etc. Sample capacity:
   "id": 48067,
   "capacityId": "AZUREIOT-co.1.instances.1.sensor.1.data",
   "type": "SENSOR",          // or "ACTUATOR"
-  "nature": "CLAMP",         // CLAMP, RELAY, PILOT_WIRE, THERMOSTAT, ...
+  "nature": "CLAMP",
   "sgReady": false,
   "instance": "co.1.instances.1",
   "connectedObjectId": 8107,
@@ -65,6 +65,13 @@ clamp, a relay, a pilot wire, a thermostat, etc. Sample capacity:
   ...
 }
 ```
+
+Capacity `nature` values recorded in the 2026-09 field-notes are `CLAMP`,
+`POWER_SENSOR`, `POWER_SWITCH` and `RELAY`. Read-only inspection of the
+site's capacities on 2026-10-11 confirmed the first three; `RELAY` was
+not present on this account and remains a prior observation. This is
+not a write-validated exhaustive enum; `nature` is distinct from the
+capacity's `type` (`SENSOR` / `ACTUATOR`) and `measureKind`.
 
 A capacity has **two** ids — easy to confuse:
 

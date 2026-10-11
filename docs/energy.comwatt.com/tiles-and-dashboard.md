@@ -29,8 +29,11 @@ tiles) the tariff/price metadata used to convert energy into euros.
 It is configuration only; the actual time-series points still come from
 `/api/aggregations/time-series` calls keyed by the tile's `device.id`.
 
-On the test site (1 site, 20 devices) the endpoint returned **56 tiles**:
-`{ REAL_TIME: 18, VALUATION: 37, THIRD_PARTY: 1 }`.
+Read-only inspection on 2026-10-11 confirmed the `tileType` values
+`REAL_TIME`, `VALUATION` and `THIRD_PARTY`. On the probe site the endpoint
+returned **57 tiles**: `{ REAL_TIME: 19, VALUATION: 37, THIRD_PARTY: 1 }`.
+These are observed response values, not an exhaustive enum validated by
+attempting tile writes.
 
 To get the actual values for each tile, the SPA then issues one
 `/api/aggregations/time-series` call **per tile** (with the tile's `device.id`).
