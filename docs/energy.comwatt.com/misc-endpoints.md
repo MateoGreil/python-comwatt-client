@@ -4,8 +4,7 @@
 
 The same origin also proxies third-party services under non-`/api` paths,
 with no Comwatt API key of our own — OpenWeatherMap and GeoNames below.
-GeoNames `/timezone` and INSEE Sirene (`/siret/{siret}`) are not yet
-documented here.
+INSEE Sirene (`/siret/{siret}`) is not yet documented here.
 
 ### Weather (OpenWeatherMap)
 
@@ -88,6 +87,34 @@ documented here.
     ]
   }
   ```
+
+### Timezone (GeoNames)
+
+- `GET /timezone?lat={lat}&lng={lng}` — GeoNames timezone lookup.
+  **Works unauthenticated** (verified live 2026-10-11). Dates are local
+  to the requested location, `YYYY-MM-DD HH:mm`:
+
+  ```jsonc
+  {
+    "timezoneId": "Europe/Paris",
+    "gmtOffset": 1, "dstOffset": 2, "rawOffset": 1,
+    "time": "2026-10-11 12:45",
+    "sunrise": "2026-10-11 08:12", "sunset": "2026-10-11 19:24",
+    "countryCode": "FR", "countryName": "France",
+    "lat": 44.8404, "lng": -0.5805   // echoed back
+  }
+  ```
+
+  Richer than the roadmap note: `countryCode` and the echoed `lat`/`lng`
+  are present too.
+
+  ⚠ **Caveat — errors come back as `200`.** Unlike the weather proxy,
+  which passes OpenWeatherMap's HTTP `404` through, this proxy wraps
+  GeoNames errors in `200 OK` with a `status` object (GeoNames code
+  `14`): missing params → `{"status":{"message":"missing parameter ","value":14}}`,
+  out-of-range coords → `{"status":{"message":"invalid lat/lng","value":14}}`
+  (both verified live). Check for `timezoneId` — or a `status` key — before
+  consuming the response.
 
 ## Tempo / tariff / grid forecast
 
