@@ -1,11 +1,13 @@
 # Misc endpoints
 
-## Weather (OpenWeatherMap proxy)
+## Non-/api proxies
 
 The same origin also proxies third-party services under non-`/api` paths,
-with no Comwatt API key of our own: OpenWeatherMap (below), GeoNames
-(`/geocode`, `/timezone`) and INSEE Sirene (`/siret/{siret}`) are not yet
+with no Comwatt API key of our own — OpenWeatherMap and GeoNames below.
+GeoNames `/timezone` and INSEE Sirene (`/siret/{siret}`) are not yet
 documented here.
+
+### Weather (OpenWeatherMap)
 
 - `GET /weather/data/2.5/forecast/` — OpenWeatherMap 5-day / 3-hour
   forecast. **Works unauthenticated** (verified live 2026-10-11); drives
@@ -55,6 +57,37 @@ documented here.
   (not OWM's JSON error shape — `via: 1.1 google` on the response), so
   don't parse errors as JSON unconditionally. Observed live 2026-10-11;
   clears within seconds.
+
+### Geocode (GeoNames)
+
+- `GET /geocode?country={cc}&address={zip or place}` — GeoNames postal
+  code / place-name lookup. **Works unauthenticated** (verified live
+  2026-10-11). `address` matches postal codes and place names alike;
+  results cap at 20 rows (GeoNames default) and there is no prefix
+  matching — a partial code returns nothing:
+  - `country=fr&address=33000` → 1 row (Bordeaux);
+    `country=fr&address=75001` → 2 rows (`Paris`, `Paris 01`);
+    `country=fr&address=33` → `[]`.
+  - Place-name queries go through GeoNames full-text search, whose
+    matches can be oblique (`address=Bordeaux` → the Paris 01–04
+    arrondissements among its 20 rows).
+  - Missing params or unknown country → `200 {"postalcodes":[]}` — the
+    proxy never errors on bad input.
+
+  Row shape (captured live 2026-10-11) — richer than the roadmap note:
+  the `adminCode1..3` fields are present too:
+
+  ```jsonc
+  {
+    "postalcodes": [
+      { "postalcode": "33000", "placeName": "Bordeaux",
+        "countryCode": "FR", "lat": 44.840439, "lng": -0.5805,
+        "adminName1": "Nouvelle-Aquitaine", "adminCode1": "75",
+        "adminName2": "Gironde",         "adminCode2": "33",
+        "adminName3": "Bordeaux",        "adminCode3": "332" }
+    ]
+  }
+  ```
 
 ## Tempo / tariff / grid forecast
 
