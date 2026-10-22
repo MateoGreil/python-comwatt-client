@@ -71,6 +71,22 @@ class _BaseClient:
 
         raise _api_error(response)
 
+    def _paginate(self, path: str) -> list[dict[str, Any]]:
+        separator = "&" if "?" in path else "?"
+        items: list[dict[str, Any]] = []
+        page = 0
+        while True:
+            response = self._request("GET", f"{path}{separator}page={page}").json()
+            content = response.get("content", [])
+            items.extend(content)
+            total_pages = response.get("totalPages")
+            if not content:
+                break
+            if total_pages is not None and page >= total_pages - 1:
+                break
+            page += 1
+        return items
+
     def close(self) -> None:
         """
         Releases the local HTTP resources held by the client.
