@@ -36,6 +36,31 @@ class DevicesMixin(_BaseClient):
         """
         return self._request("GET", f"/devices/{device_id}").json()
 
+    def get_device_capacities(self, device_id: int | str) -> list[dict[str, Any]]:
+        """
+        Retrieves the capacities of a specific device.
+
+        Unlike the site-wide listing (which deduplicates repeated entities
+        into fastjson `@ref` pointers), this endpoint returns an array of
+        full capacity objects.
+
+        Each capacity has two ids: the numeric `id` (the primary key,
+        expected by all `/capacities/{id}/...` methods such as
+        `switch_capacity`), and the opaque `capacityId` string (the
+        gateway-side identifier, echoed in WebSocket streaming frames).
+
+        Args:
+            device_id (str): The ID of the device.
+
+        Returns:
+            list: A list of the device's capacities.
+
+        Raises:
+            Exception: If an error occurs while retrieving the capacities.
+
+        """
+        return self._request("GET", f"/devices/{device_id}/capacities").json()
+
     def put_device(self, device_id: int | str, payload: dict[str, Any]) -> dict[str, Any]:
         """
         Updates a specific device with the provided payload.

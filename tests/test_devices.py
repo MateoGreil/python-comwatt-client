@@ -79,6 +79,47 @@ def test_get_device_error(client):
 
 
 @responses.activate
+def test_get_device_capacities_success(client):
+    mock_capacities = [
+        {
+            "id": 48067,
+            "capacityId": "AZUREIOT-co.1.instances.1.sensor.1.data",
+            "nature": "POWER_SENSOR",
+            "type": "SENSOR",
+        }
+    ]
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/devices/device-1/capacities",
+        json=mock_capacities,
+        status=200,
+    )
+
+    result = client.get_device_capacities("device-1")
+
+    assert result == mock_capacities
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    assert request.url == f"{BASE_URL}/devices/device-1/capacities"
+
+
+@responses.activate
+def test_get_device_capacities_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/devices/device-1/capacities",
+        json={},
+        status=404,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_device_capacities("device-1")
+
+    assert "device-1" in str(exc_info.value)
+    assert "404" in str(exc_info.value)
+
+
+@responses.activate
 def test_put_device_success(client):
     mock_response = {"id": "device-1", "name": "Updated Device"}
     payload = {"name": "Updated Device"}

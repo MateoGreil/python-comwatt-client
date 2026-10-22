@@ -95,7 +95,8 @@ always returns full objects.
 - `GET  /api/devices/{deviceId}` — full device document.
 - `GET  /api/devices/{deviceId}/capacities` — **200**, this device's
   capacities as an array of full objects — no `@ref` indirection to
-  resolve (live-verified 2026-10-11).
+  resolve (live-verified 2026-10-11). Already wrapped by
+  `ComwattClient.get_device_capacities`.
 - `PUT  /api/devices/{deviceId}` — update device (name, configuration, etc.).
   Already wrapped by `ComwattClient.put_device`.
 - `PUT  /api/devices/{deviceId}?autoset=true` — same with the autoset flag.

@@ -46,6 +46,7 @@ client.get_device_ts_time_ago(
 )
 ```
 - `get_device(self, device_id)`: Retrieves information about a specific device.
+- `get_device_capacities(self, device_id)`: Retrieves the capacities of a specific device as full objects (no `@ref` indirection, unlike the site-wide listing). Each capacity has two ids: the numeric `id` (expected by `switch_capacity` / `set_pilot_wire` / ...) and the opaque `capacityId` string (echoed in WebSocket frames).
 - `put_device(self, device_id, payload)`: Updates a specific device with the provided payload.
 - `stream_measurements(self, site, *, reconnect=False, reconnect_backoff=1.0, reconnect_backoff_max=60.0, reconnect_max_attempts=None)`: Streams live measurements (`FLOW` / `STATE`) for a single site over STOMP-over-WebSocket. Takes one site dict (as returned by `get_sites`); yields `Measurement` / `CapacityChanged` events. Requires the optional `[stream]` extra (`websocket-client`). Pass `reconnect=True` to enable opt-in exponential-backoff reconnection on socket drops; `reconnect_backoff` sets the initial delay (seconds), `reconnect_backoff_max` caps the delay, and `reconnect_max_attempts` limits consecutive failed connect attempts before raising (`None` = unlimited). Reconnect is off by default; an auth rejection is always terminal.
 
