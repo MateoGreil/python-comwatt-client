@@ -57,7 +57,7 @@ class _BaseClient:
             raise ComwattAuthError("Session expired and no stored credentials to re-authenticate")
 
     def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
-        url = f'{self.base_url}{path}'
+        url = path if path.startswith(("http://", "https://")) else f'{self.base_url}{path}'
         response = self.session.request(method, url, timeout=self.timeout, **kwargs)
         if response.status_code == 200:
             return response
