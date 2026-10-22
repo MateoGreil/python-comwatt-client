@@ -40,6 +40,38 @@ class SitesMixin(_BaseClient):
 
         return self._request("GET", "/sites").json()
 
+    def get_site(self, site_id: int | str) -> dict[str, Any]:
+        """
+        Retrieves a single site by its ID.
+
+        Args:
+            site_id (int | str): The ID of the site.
+
+        Returns:
+            dict: The site object.
+
+        Raises:
+            Exception: If an error occurs while retrieving the site.
+
+        """
+        return self._request("GET", f"/sites/{site_id}").json()
+
+    def get_site_by_uid(self, site_uid: str) -> dict[str, Any]:
+        """
+        Retrieves a single site by its UID.
+
+        Args:
+            site_uid (str): The UID of the site.
+
+        Returns:
+            dict: The site object.
+
+        Raises:
+            Exception: If an error occurs while retrieving the site.
+
+        """
+        return self._request("GET", f"/sites/by-site-uid/{site_uid}").json()
+
     def get_tiles(self, site_id: int | str) -> list[dict[str, Any]]:
         """
         Retrieves the dashboard tile configuration for the specified site.

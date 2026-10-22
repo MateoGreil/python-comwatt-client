@@ -40,6 +40,25 @@ Notes:
 
 Both ids exist in the response, so the client can pick whichever it needs.
 
+## `GET /api/sites/{siteId}`
+
+Returns a single site by its numeric ID. Response shape is identical to a single entry from `GET /api/sites`.
+
+- **200** with the site object when it exists.
+- **500** when the ID does not exist (not 404 — live 2026-11-14).
+
+Dead variants (do not re-probe):
+- `GET /api/sites/by-uid/{uid}` → 404 "No static resource"
+- `GET /api/sites/{siteUid}` (UID in numeric path position) → 400 "Failed to convert 'siteId'"
+- Query parameters `?siteId=...` or `?siteUid=...` on `GET /api/sites` are ignored (returns full list)
+
+## `GET /api/sites/by-site-uid/{siteUid}`
+
+Returns a single site by its short `siteUid` string (e.g. "abc12345"). Response shape is identical to the entries from `GET /api/sites`.
+
+- **200** with the site object when it exists.
+- **500** when the UID does not exist (not 404 — live 2026-11-14).
+
 ## `GET /api/sites/{siteId}/profile`
 
 Referenced by the SPA but returns **403** for a normal end-user. Likely an

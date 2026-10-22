@@ -71,3 +71,90 @@ def test_get_sites_error(client):
         client.get_sites()
 
     assert "404" in str(exc_info.value)
+
+
+@responses.activate
+def test_get_site_success(client):
+    mock_site = {"id": 42, "name": "Test Site"}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/sites/42",
+        json=mock_site,
+        status=200,
+    )
+
+    result = client.get_site(42)
+
+    assert result == mock_site
+    assert len(responses.calls) == 1
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    assert request.url == f"{BASE_URL}/sites/42"
+
+
+@responses.activate
+def test_get_site_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/sites/42",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_site(42)
+
+    assert "500" in str(exc_info.value)
+
+
+@responses.activate
+def test_get_site_str_id(client):
+    mock_site = {"id": 42, "name": "Test Site"}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/sites/42",
+        json=mock_site,
+        status=200,
+    )
+
+    result = client.get_site("42")
+
+    assert result == mock_site
+    assert len(responses.calls) == 1
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    assert request.url == f"{BASE_URL}/sites/42"
+
+
+@responses.activate
+def test_get_site_by_uid_success(client):
+    mock_site = {"id": 42, "siteUid": "abc12345"}
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/sites/by-site-uid/abc12345",
+        json=mock_site,
+        status=200,
+    )
+
+    result = client.get_site_by_uid("abc12345")
+
+    assert result == mock_site
+    assert len(responses.calls) == 1
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    assert request.url == f"{BASE_URL}/sites/by-site-uid/abc12345"
+
+
+@responses.activate
+def test_get_site_by_uid_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/sites/by-site-uid/abc12345",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_site_by_uid("abc12345")
+
+    assert "500" in str(exc_info.value)

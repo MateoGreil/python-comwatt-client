@@ -13,6 +13,8 @@ The client currently supports the following methods:
 - `logout(self)`: Logs the current session out server-side (`POST /v1/logout`) and clears the stored credentials so `auto_reauth` cannot silently restore the session. Idempotent (a 401 when already logged out is a no-op). Note this is distinct from `close()`, which only releases the local HTTP session without logging out.
 - `get_authenticated_user(self)`: Retrieves information about the authenticated user.
 - `get_sites(self)`: Retrieves a list of sites associated with the authenticated user.
+- `get_site(self, site_id)`: Retrieves a single site. Takes the **numeric site id** (from `site["id"]`), not the short `siteUid` string.
+- `get_site_by_uid(self, site_uid)`: Retrieves a single site. Takes the short `siteUid` string (from `site["siteUid"]`), not the numeric site id.
 - `get_site_networks_ts_time_ago(self, site_id, measure_kind = "FLOW", aggregation_level = "NONE", aggregation_type = None, time_ago_unit = "HOUR", time_ago_value = 1, start = None, end = None)`: Retrieves the time series data for the networks of a specific site, based on the provided parameters. **Deprecated** — use `get_site_time_series` instead (emits a `DeprecationWarning`; the endpoint still works but the app has moved to `site-time-series`).
 - `get_site_consumption_breakdown_time_ago(self, site_id, aggregation_level = "HOUR", time_ago_unit = "DAY", time_ago_value = 1, start = None, end = None)` Retrieves the consumption breakdown data for a specific site, based on the provided parameters. **Deprecated** — use `get_top_consumption` instead (emits a `DeprecationWarning`; the endpoint still works but the app has moved to `top-consumption`).
 - `get_devices(self, site_id)`: Retrieves a list of devices for the specified site.
