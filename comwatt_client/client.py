@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ._auth import AuthMixin
+from ._alert_configs import AlertConfigsMixin
 from ._aggregations import AggregationsMixin
 from ._capacities import CapacitiesMixin
 from ._devices import DevicesMixin
@@ -14,7 +15,7 @@ from ._electricity_contracts import ElectricityContractsMixin
 from ._weather import WeatherProxy
 
 
-class ComwattClient(AuthMixin, AggregationsMixin, CapacitiesMixin, DevicesMixin, GridMixin, PlanningsMixin, SitesMixin, ConnectedObjectsMixin, StreamingMixin, ElectricityContractsMixin, TypicalDaysMixin):
+class ComwattClient(AuthMixin, AlertConfigsMixin, AggregationsMixin, CapacitiesMixin, DevicesMixin, GridMixin, PlanningsMixin, SitesMixin, ConnectedObjectsMixin, StreamingMixin, ElectricityContractsMixin, TypicalDaysMixin):
     """
     A client for interacting with the Comwatt API.
 

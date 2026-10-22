@@ -411,10 +411,17 @@ when only a body field is supplied.
 ## Alerts
 
 - `GET /api/alertconfigs/v2?deviceId={deviceId}` — current threshold
-  config for a device:
-  `{period, id, min, max, activated, deviceId}` (live 2026-07-04; `max` may
-  be `null`). Observed `period` values include `SLIDING_24_HOURS`.
-- `GET     /api/alertconfigs/v2` — list / create.
+  config for a device: a **single** `{period, id, min, max, activated,
+  deviceId}` object, no pagination envelope (live 2026-07-04; re-verified
+  2026-10-22). `min` and `max` are independently nullable. Observed
+  `period` values include `SLIDING_24_HOURS` (the only value seen across a
+  20-device probe). Devices **without** a configured alert still answer
+  **200** with a skeleton object (`id`/`min`/`max`/`deviceId` null,
+  `activated: false`) — never 404, never an empty list.
+- `GET /api/alertconfigs/v2` **without** `deviceId` → **400**
+  problem+json `Required parameter 'deviceId' is not present.`
+  (live 2026-10-22) — there is no list-all variant on the bare path; only
+  the POST create lives there (bundle-derived, not live-tested).
 - `GET|PUT /api/alertconfigs/v2/{id}`
 
 ## Thermal control
