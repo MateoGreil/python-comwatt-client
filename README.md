@@ -20,6 +20,10 @@ The client currently supports the following methods:
 - `get_devices(self, site_id)`: Retrieves a list of devices for the specified site.
 - `get_connected_objects(self, site_id=None, gateway_uid=None)`: Retrieves the connected objects for a site or a gateway. Exactly one of `site_id` / `gateway_uid` is required (raises `ValueError` otherwise).
 - `get_connected_object(self, connected_object_id)`: Retrieves information about a specific connected object.
+- `get_gateway(self, gateway_id)`: Retrieves a gateway (the Comwatt box) by its **numeric id** (`gateway["id"]`) — the `gatewayUid` string is rejected with 400. Returns the full gateway document (JSON-with-refs, returned as-is); `connected` / `updating` / `status` are the "box offline / being updated" flags.
+- `get_gateway_by_uid(self, gateway_uid)`: Retrieves a gateway by its opaque `gatewayUid` string. Returns the same document as `get_gateway`.
+- `get_gateway_network(self, gateway_uid)`: Retrieves the network details of a gateway (signal strength, channel, ...). ⚠ Takes the **`gatewayUid`**, not the numeric id — the numeric id answers 412 `gateway.not.found.for.fetching.network.details` (bare JSON array error body).
+- `get_gateway_ssids(self, gateway_id)`: Retrieves the Wi-Fi networks visible to a gateway, by **numeric id**. ⚠ Privacy-sensitive: the response includes **neighbouring** Wi-Fi networks, not just the gateway's own.
 - `get_measure_keys(self, site_id)`: Retrieves the measure keys (flat measurement inventory) for a site — each a `(device, measureKind)` pair with a stable id and `measureKey` UUID.
 - `get_tiles(self, site_id)`: Retrieves the dashboard tile configuration for a site (tile type + which device each points at; configuration only, no live values).
 - `get_electricity_price(self, site_id)`: Retrieves the EDF Tempo calendar / tariff structure for a site (`tempoSyntheses`, `daily`, ...).
