@@ -12,10 +12,11 @@ from ._typical_days import TypicalDaysMixin
 from ._connected_objects import ConnectedObjectsMixin
 from ._streaming import StreamingMixin
 from ._electricity_contracts import ElectricityContractsMixin
+from ._thermal_control import ThermalControlMixin
 from ._weather import WeatherProxy
 
 
-class ComwattClient(AuthMixin, AlertConfigsMixin, AggregationsMixin, CapacitiesMixin, DevicesMixin, GridMixin, PlanningsMixin, SitesMixin, ConnectedObjectsMixin, StreamingMixin, ElectricityContractsMixin, TypicalDaysMixin):
+class ComwattClient(AuthMixin, AlertConfigsMixin, AggregationsMixin, CapacitiesMixin, DevicesMixin, GridMixin, PlanningsMixin, SitesMixin, ConnectedObjectsMixin, StreamingMixin, ElectricityContractsMixin, TypicalDaysMixin, ThermalControlMixin):
     """
     A client for interacting with the Comwatt API.
 
