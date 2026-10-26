@@ -14,10 +14,11 @@
       "commitMessagePrefix": "📌"
     }
   ],
-  "regexManagers": [
+  "customManagers": [
     {
+      "customType": "regex",
       "description": "Track setuptools in pyproject.toml build-system (no native manager covers [build-system] requires)",
-      "fileMatch": ["(^|/)pyproject\\.toml$"],
+      "managerFilePatterns": ["/(^|/)pyproject\\.toml$/"],
       "matchStrings": ["requires\\s*=\\s*\\[\"(?<depName>setuptools)>=(?<currentValue>[^\"]+)\"\\]"],
       "datasourceTemplate": "pypi",
       "versioningTemplate": "pep440",
