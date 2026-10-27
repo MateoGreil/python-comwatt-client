@@ -142,3 +142,16 @@ def test_bare_array_error_without_usable_entries_gives_no_detail(client):
         client.get_devices("site-1")
 
     assert exc_info.value.detail is None
+
+
+@responses.activate
+def test_resource_403_raises_api_error_not_auth_error(client):
+    responses.add(
+        responses.GET, f"{BASE_URL}/devices", json={"detail": "forbidden"}, status=403
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_devices("site-1")
+
+    assert not isinstance(exc_info.value, ComwattAuthError)
+    assert exc_info.value.status_code == 403

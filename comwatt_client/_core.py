@@ -41,9 +41,33 @@ def _parse_session_expiry(raw: str | None) -> datetime | None:
     return parsed
 
 
-def _api_error(response: requests.Response) -> ComwattError:
+def _error_class(status_code: int, *, auth_context: bool = False) -> type[ComwattError]:
+    """
+    Maps an HTTP status to the exception class to raise.
+
+    401 is always an authentication failure. 403 means "bad credentials"
+    only on the login endpoint itself (`auth_context=True`); anywhere else
+    it is an authorization failure and stays a `ComwattAPIError`.
+
+    Args:
+        status_code (int): The HTTP status of the response.
+        auth_context (bool): Whether the failing request is the login
+            call itself (default: False).
+
+    Returns:
+        type: `ComwattAuthError` or `ComwattAPIError`.
+
+    """
+    if status_code == 401:
+        return ComwattAuthError
+    if auth_context and status_code == 403:
+        return ComwattAuthError
+    return ComwattAPIError
+
+
+def _api_error(response: requests.Response, *, auth_context: bool = False) -> ComwattError:
     detail = _response_detail(response)
-    exc_cls = ComwattAuthError if response.status_code == 401 else ComwattAPIError
+    exc_cls = _error_class(response.status_code, auth_context=auth_context)
     return exc_cls(status_code=response.status_code, url=response.url, detail=detail, response=response)
 
 
@@ -71,9 +95,7 @@ class _BaseClient:
         response = self.session.post(url, json=data, timeout=self.timeout)
 
         if response.status_code != 200:
-            detail = _response_detail(response)
-            exc_cls = ComwattAuthError if response.status_code in (401, 403) else ComwattAPIError
-            raise exc_cls(status_code=response.status_code, url=response.url, detail=detail, response=response)
+            raise _api_error(response, auth_context=True)
 
         if not self.session.cookies.get("cwt_session"):
             raise ComwattAPIError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
