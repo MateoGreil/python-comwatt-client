@@ -18,7 +18,9 @@ class CapacitiesMixin(_BaseClient):
             dict: A dictionary containing the response from the API.
 
         """
-        return self._request("PUT", f"/capacities/{capacity_id}/switch?enable={str(enable).lower()}").json()
+        return self._json_or_empty(self._request(
+            "PUT", f"/capacities/{capacity_id}/switch?enable={str(enable).lower()}"
+        ))
 
     def set_pilot_wire(self, capacity_id: int | str, state: str) -> dict[str, Any]:
         """
@@ -41,9 +43,9 @@ class CapacitiesMixin(_BaseClient):
             dict: A dictionary containing the response from the API.
 
         """
-        return self._request(
+        return self._json_or_empty(self._request(
             "PUT", f"/capacities/{capacity_id}/pilot-wire", params={"state": state}
-        ).json()
+        ))
 
     def set_thermal_mode(self, capacity_id: int | str, state: str) -> dict[str, Any]:
         """
@@ -67,9 +69,9 @@ class CapacitiesMixin(_BaseClient):
             dict: A dictionary containing the response from the API.
 
         """
-        return self._request(
+        return self._json_or_empty(self._request(
             "PUT", f"/capacities/{capacity_id}/thermal-mode", params={"state": state}
-        ).json()
+        ))
 
     def set_thermostat_set_point(self, capacity_id: int | str, value: float | int) -> dict[str, Any]:
         """
@@ -87,9 +89,10 @@ class CapacitiesMixin(_BaseClient):
             dict: A dictionary containing the response from the API.
 
         """
-        return self._request(
+        return self._json_or_empty(self._request(
             "PUT", f"/capacities/{capacity_id}/thermostat-set-point", params={"value": value}
-        ).json()
+        ))
+
 
     def get_thermal_control(self, device_id: int | str) -> dict[str, Any] | None:
         """
@@ -174,6 +177,6 @@ class CapacitiesMixin(_BaseClient):
             payload["setPoint"] = set_point
         if mode is not None:
             payload["mode"] = mode
-        return self._request(
+        return self._json_or_empty(self._request(
             "PUT", f"/thermalcontrol/{thermal_control_id}", json=payload
-        ).json()
+        ))

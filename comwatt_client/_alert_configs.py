@@ -91,7 +91,7 @@ class AlertConfigsMixin(_BaseClient):
                 "and the update (PUT) requires the existing config id. The "
                 "creation path (POST) is not exposed by this client."
             )
-        return self._request(
+        return self._json_or_empty(self._request(
             "PUT",
             f"/alertconfigs/v2/{config_id}",
             json={
@@ -101,4 +101,4 @@ class AlertConfigsMixin(_BaseClient):
                 "period": period,
                 "activated": activated,
             },
-        ).json()
+        ))

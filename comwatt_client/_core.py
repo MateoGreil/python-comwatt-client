@@ -144,7 +144,7 @@ class _BaseClient:
         self._reauthenticate_if_expired()
         url = path if path.startswith(("http://", "https://")) else f'{self.base_url}{path}'
         response = self.session.request(method, url, timeout=self.timeout, **kwargs)
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             return response
 
         if response.status_code == 401 and self.auto_reauth and self._username and self._auth_hash:
@@ -155,6 +155,25 @@ class _BaseClient:
             raise _api_error(retry_response)
 
         raise _api_error(response)
+
+    def _json_or_empty(self, response: requests.Response) -> dict[str, Any]:
+        """
+        Parses a response body as JSON, mapping an empty body to ``{}``.
+
+        Write endpoints may answer 201/204; a 204 carries no body, so
+        callers that would otherwise run ``response.json()`` on it use
+        this helper to get an empty dict instead of a decode error.
+
+        Args:
+            response (requests.Response): The response to parse.
+
+        Returns:
+            dict: The parsed body, or ``{}`` when the body is blank.
+
+        """
+        if not response.text.strip():
+            return {}
+        return response.json()
 
     def _paginate(self, path: str) -> list[dict[str, Any]]:
         """

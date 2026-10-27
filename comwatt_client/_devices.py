@@ -73,7 +73,7 @@ class DevicesMixin(_BaseClient):
             dict: A dictionary containing the response from the API.
 
         """
-        return self._request("PUT", f"/devices/{device_id}", json=payload).json()
+        return self._json_or_empty(self._request("PUT", f"/devices/{device_id}", json=payload))
 
     def set_device_mode(self, device_id: int | str, mode: str) -> dict[str, Any]:
         """
@@ -100,6 +100,6 @@ class DevicesMixin(_BaseClient):
             dict: A dictionary containing the response from the API.
 
         """
-        return self._request(
+        return self._json_or_empty(self._request(
             "PUT", f"/devices/{device_id}/mode", json={"mode": mode}
-        ).json()
+        ))

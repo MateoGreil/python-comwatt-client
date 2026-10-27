@@ -60,7 +60,7 @@ class SchedulingMixin(_BaseClient):
             Exception: If an error occurs while updating the planning.
 
         """
-        return self._request("PUT", f"/plannings/{planning_id}", json=payload).json()
+        return self._json_or_empty(self._request("PUT", f"/plannings/{planning_id}", json=payload))
 
     def get_typical_days(self, site_id: int | str) -> list[dict[str, Any]]:
         """
@@ -111,7 +111,7 @@ class SchedulingMixin(_BaseClient):
                 day.
 
         """
-        return self._request("POST", f"/typicaldays?siteId={site_id}", json=payload).json()
+        return self._json_or_empty(self._request("POST", f"/typicaldays?siteId={site_id}", json=payload))
 
     def update_typical_day(self, typical_day_id: int | str, payload: dict[str, Any]) -> dict[str, Any]:
         """
@@ -136,4 +136,4 @@ class SchedulingMixin(_BaseClient):
                 day.
 
         """
-        return self._request("PUT", f"/typicaldays/{typical_day_id}", json=payload).json()
+        return self._json_or_empty(self._request("PUT", f"/typicaldays/{typical_day_id}", json=payload))
