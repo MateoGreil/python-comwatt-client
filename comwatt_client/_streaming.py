@@ -58,6 +58,8 @@ def _open_websocket(cookie: str, timeout: float) -> Any:
 
 
 def _try_float(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
     try:
         return float(value)
     except (TypeError, ValueError):
@@ -65,6 +67,8 @@ def _try_float(value: Any) -> float | None:
 
 
 def _try_bool(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
     if value == "true":
         return True
     if value == "false":
@@ -77,7 +81,7 @@ class Measurement:
     gateway_uid: str
     capacity_id: str
     measure_kind: str
-    value: str
+    value: str | bool
     value_float: float | None
     value_bool: bool | None
 
@@ -154,9 +158,16 @@ def _consume_stream(ws: Any, ws_closed_exc: type[BaseException], ws_timeout_exc:
         if not isinstance(payload, dict):
             continue
         if "measures" in payload:
-            gateway_uid = payload["gatewayUid"]
+            gateway_uid = payload.get("gatewayUid")
+            if gateway_uid is None:
+                continue
             for measure in payload["measures"]:
-                yield Measurement.from_measure(gateway_uid, measure)
+                if not isinstance(measure, dict):
+                    continue
+                try:
+                    yield Measurement.from_measure(gateway_uid, measure)
+                except (KeyError, TypeError):
+                    continue
         elif "id" in payload:
             yield CapacityChanged(
                 capacity_id=payload["id"],

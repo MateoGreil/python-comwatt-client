@@ -25,6 +25,17 @@ MEASURES_FRAME = (
 )
 PING_FRAME = 'MESSAGE\nmessage-id:m-2\n\n{"gatewayUid":"BX","measures":[]}\x00'
 CAPACITY_FRAME = 'MESSAGE\nmessage-id:m-3\n\n{"id":48067,"enable":true}\x00'
+MALFORMED_GATEWAY_FRAME = (
+    'MESSAGE\nmessage-id:m-bad\n\n'
+    '{"measures":[{"capacityId":"c.1","measureKind":"FLOW","value":"1.0"}]}\x00'
+)
+MIXED_MEASURES_FRAME = (
+    'MESSAGE\nmessage-id:m-mixed\ndestination:/topic/sites/BX/capacityChanged\n\n'
+    '{"gatewayUid":"BX","measures":['
+    '{"capacityId":"bad","measureKind":"FLOW"},'
+    '{"capacityId":"co.2.sensor.0.data","measureKind":"STATE","value":true}'
+    ']}\x00'
+)
 
 
 class FakeWS:
@@ -821,3 +832,53 @@ def test_stream_reconnect_teardown_sends_stop(monkeypatch, client):
 
     assert len(_sent_stop_frames(fake)) == 1
     assert any(f.startswith("DISCONNECT") for f in fake.sent)
+
+
+def test_measurement_from_measure_native_bool_value():
+    m = Measurement.from_measure(
+        "BX", {"capacityId": "c.1", "measureKind": "STATE", "value": True}
+    )
+    assert m.value is True
+    assert m.value_bool is True
+    assert m.value_float is None
+
+    m = Measurement.from_measure(
+        "BX", {"capacityId": "c.1", "measureKind": "STATE", "value": False}
+    )
+    assert m.value is False
+    assert m.value_bool is False
+    assert m.value_float is None
+
+
+def test_measurement_from_measure_string_bools_still_parse():
+    m = Measurement.from_measure(
+        "BX", {"capacityId": "c.1", "measureKind": "STATE", "value": "true"}
+    )
+    assert m.value_bool is True
+    m = Measurement.from_measure(
+        "BX", {"capacityId": "c.1", "measureKind": "STATE", "value": "false"}
+    )
+    assert m.value_bool is False
+
+
+def test_stream_skips_measures_frame_missing_gateway_uid(monkeypatch, client):
+    client.session.cookies.set("cwt_session", "abc123")
+    _patch_with_fake(monkeypatch, [CONNECTED_FRAME, MALFORMED_GATEWAY_FRAME, MEASURES_FRAME])
+
+    events = list(client.stream_measurements(SITE))
+
+    assert len(events) == 1
+    assert isinstance(events[0], Measurement)
+    assert events[0].capacity_id == "co.1.sensor.0.data"
+
+
+def test_stream_skips_malformed_measure_and_yields_valid_one(monkeypatch, client):
+    client.session.cookies.set("cwt_session", "abc123")
+    _patch_with_fake(monkeypatch, [CONNECTED_FRAME, MIXED_MEASURES_FRAME])
+
+    events = list(client.stream_measurements(SITE))
+
+    assert len(events) == 1
+    assert isinstance(events[0], Measurement)
+    assert events[0].capacity_id == "co.2.sensor.0.data"
+    assert events[0].value_bool is True
