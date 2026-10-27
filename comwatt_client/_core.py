@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import requests
 
+from datetime import datetime, timezone
 from types import TracebackType
 from typing import Any, TypeVar
 
@@ -16,6 +17,18 @@ def _response_detail(response: requests.Response) -> str | None:
     if isinstance(body, dict):
         return body.get("detail")
     return None
+
+
+def _parse_session_expiry(raw: str | None) -> datetime | None:
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def _api_error(response: requests.Response) -> ComwattError:
@@ -35,6 +48,7 @@ class _BaseClient:
         self.auto_reauth = auto_reauth
         self._username: str | None = None
         self._auth_hash: str | None = None
+        self._session_expires_at: datetime | None = None
 
     def _post_authent(self, username: str, password_hash: str) -> None:
         url = f'{self.base_url}/v1/authent'
@@ -49,6 +63,8 @@ class _BaseClient:
 
         if not self.session.cookies.get("cwt_session"):
             raise ComwattAPIError("Authentication succeeded (HTTP 200) but no cwt_session cookie was set")
+
+        self._session_expires_at = _parse_session_expiry(response.headers.get("x-cwt-token"))
 
     def _reauthenticate(self) -> None:
         if self._username and self._auth_hash:

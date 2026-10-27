@@ -2,10 +2,36 @@ from __future__ import annotations
 
 import hashlib
 
+from datetime import datetime
+
 from ._core import _BaseClient, _api_error
 
 
 class AuthMixin(_BaseClient):
+    @property
+    def session_expires_at(self) -> datetime | None:
+        """
+        The instant the current session cookie dies, as a UTC-aware
+        ``datetime`` — or ``None``.
+
+        Captured from the ``x-cwt-token`` response header of the login
+        (``POST /v1/authent``): despite its name it is not a token but the
+        session expiry instant, login time + exactly 2 h (observed live,
+        see docs/energy.comwatt.com/auth.md). Refreshed on every successful
+        (re-)authentication, reset to ``None`` on ``logout()``. ``None``
+        before the first login, and also when the server omits the header
+        or sends an unparseable value (tolerated silently: authentication
+        still succeeded).
+
+        Args:
+            None
+
+        Returns:
+            datetime | None: The session expiry instant (tz-aware), or None.
+
+        """
+        return self._session_expires_at
+
     @staticmethod
     def _hash_password(password: str) -> str:
         return hashlib.sha256(f'jbjaonfusor_{password}_4acuttbuik9'.encode()).hexdigest()
@@ -92,3 +118,4 @@ class AuthMixin(_BaseClient):
 
         self._username = None
         self._auth_hash = None
+        self._session_expires_at = None
