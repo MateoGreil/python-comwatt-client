@@ -113,8 +113,16 @@ def test_get_connected_object_error(client):
 @responses.activate
 def test_get_connected_object_devices_success(client):
     devices = [
-        {"id": 12, "name": "solaire en autoproduction", "connectedObjectId": 8107},
-        {"id": 13, "name": "compteur réseau", "connectedObjectId": 8107},
+        {
+            "id": 12,
+            "name": "solaire en autoproduction",
+            "uuid": "uuid-solar-panel-1",
+            "deviceKind": {"code": "SOLAR_PANEL", "category": "SOLAR_PRODUCTION"},
+            "capacities": [],
+            "coState": "RUNNING",
+            "sourceIsOnline": True,
+        },
+        {"id": 13, "name": "compteur réseau", "deviceKind": {"code": "GRID_METER"}},
     ]
     responses.add(
         responses.GET,

@@ -59,9 +59,12 @@ class ConnectedObjectsMixin(_BaseClient):
 
         Narrower than `get_devices(site_id)`: only the `/api/devices` entries
         whose parent connected object is this one, without re-listing the
-        whole site. The endpoint returned 200 live; the exact payload shape
-        was not captured in the field notes, so entries are passed through
-        as-is.
+        whole site. Returns full device documents (JSON-with-refs, same
+        family as the site-wide listing) — live-verified 2026-10-27 on the
+        probe account: 2 devices on one connected object, each carrying
+        `id`, `name`, `uuid`, `deviceKind`, `capacities`, `features`, `site`,
+        `coState`, `configuration`, `partNature`, `threePhase`, `archived`,
+        `children`, `sourceIsOnline` and the `@id` ref.
 
         Args:
             connected_object_id (int | str): The numeric ID of the connected
