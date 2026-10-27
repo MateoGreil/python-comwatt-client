@@ -258,9 +258,11 @@ Sirene below.
   import a platform's resources into a site (installer flow, bundle, not
   exercised).
 - `GET /api/products` — Comwatt hardware catalogue
-  (`MONITOR_GEN_4`, `POWER_GEN_4`, …).
+  (`MONITOR_GEN_4`, `POWER_GEN_4`, …). Live-verified 2026-10-27: 12
+  entries on the probe account; entries carry the `@id` ref alongside
+  `id` (JSON-with-refs).
 - `GET /api/products/{id}` — **200**, same shape as the list entry
-  (live-verified 2026-10-11):
+  (live-verified 2026-10-11; `@id` also present, re-confirmed 2026-10-27):
 
   ```jsonc
   {

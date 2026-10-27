@@ -134,7 +134,12 @@ Broader than `/api/devices` — it also surfaces gateway-level entries.
   on the site in one call.
 - `GET  /api/connectedobjects?gatewayUid={uid}` — filter by gateway.
 - `GET  /api/connectedobjects/{connectedObjectId}`
-- `GET  /api/connectedobjects/{connectedObjectId}/devices`
+- `GET  /api/connectedobjects/{connectedObjectId}/devices` — the
+  `/api/devices` documents whose parent connected object is this one
+  (full device documents, live-verified 2026-10-27 on one CO with 2
+  devices: `id, name, uuid, deviceKind, capacities, features, site,
+  coState, configuration, partNature, threePhase, archived, children,
+  sourceIsOnline` + the `@id` ref)
 - `GET  /api/connectedobjects/{connectedObjectId}/modbus-expert`
   (see [Modbus group](#modbus-group))
 - `POST /api/connectedobjects/` — pair a new connected object.
@@ -230,6 +235,9 @@ recon; live re-probe 2026-10-11 on an account whose objects are all
     "device_kinds": ["SOLAR_PANEL", "BATTERY", "GRID_METER"]
   }
   ```
+
+  Live entries also carry a `protocols` key (re-verified 2026-10-27; 4
+  entries again — value shape not captured).
 
 - `GET /api/gateways/{gatewayUid}/scan-modbus-ip?port={port}` — triggers an
   actual Modbus scan on the gateway. Long-running: nginx cuts it with a
