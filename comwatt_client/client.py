@@ -38,8 +38,12 @@ class ComwattClient(AuthMixin, AlertConfigsMixin, AggregationsMixin, CapacitiesM
 
         Args:
             timeout (float): The request timeout in seconds (default: 30).
-            auto_reauth (bool): Whether to automatically re-authenticate on a
-                401 response when credentials are available (default: True).
+            auto_reauth (bool): Whether to keep the session alive
+                automatically when credentials are available (default: True).
+                Re-authenticates proactively before a request once the
+                session expiry (see `session_expires_at`) is within 30
+                seconds, and falls back to re-authenticating on a 401
+                response (retrying the request once).
 
         Returns:
             None

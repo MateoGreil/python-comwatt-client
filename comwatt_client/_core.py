@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import requests
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from types import TracebackType
 from typing import Any, TypeVar
 
@@ -39,6 +39,8 @@ def _api_error(response: requests.Response) -> ComwattError:
 
 _C = TypeVar("_C", bound="_BaseClient")
 
+_REAUTH_MARGIN = timedelta(seconds=30)
+
 
 class _BaseClient:
     def __init__(self, timeout: float = 30, auto_reauth: bool = True) -> None:
@@ -72,7 +74,15 @@ class _BaseClient:
         else:
             raise ComwattAuthError("Session expired and no stored credentials to re-authenticate")
 
+    def _reauthenticate_if_expired(self) -> None:
+        if not (self.auto_reauth and self._username and self._auth_hash):
+            return
+        expires_at = self._session_expires_at
+        if expires_at is not None and datetime.now(timezone.utc) >= expires_at - _REAUTH_MARGIN:
+            self._reauthenticate()
+
     def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
+        self._reauthenticate_if_expired()
         url = path if path.startswith(("http://", "https://")) else f'{self.base_url}{path}'
         response = self.session.request(method, url, timeout=self.timeout, **kwargs)
         if response.status_code == 200:
