@@ -131,6 +131,8 @@ All errors raised by the client subclass `ComwattError`:
 - `ComwattAuthError` — the credentials were rejected (HTTP 401/403 on login) or the session expired (HTTP 401). Re-authenticate.
 - `ComwattAPIError` — any other unexpected HTTP status, including non-credential failures of `authenticate()` (e.g. a 5xx during an outage, or a 200 response missing the session cookie). Exposes `.status_code`, `.url`, `.detail`.
 
+  `detail` is extracted from the API's two error body shapes: the RFC-7807 `detail` field, and — for the bare JSON array of Spring validation errors some endpoints return instead (e.g. `412`, also seen on `404`/`403`) — each entry's `code` (falling back to `codes[0]`, then `defaultMessage`), comma-joined.
+
 ```python
 from comwatt_client import ComwattClient, ComwattAuthError, ComwattAPIError
 

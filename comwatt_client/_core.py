@@ -16,6 +16,15 @@ def _response_detail(response: requests.Response) -> str | None:
         return None
     if isinstance(body, dict):
         return body.get("detail")
+    if isinstance(body, list):
+        codes = []
+        for entry in body:
+            if not isinstance(entry, dict):
+                continue
+            code = entry.get("code") or (entry.get("codes") or [None])[0] or entry.get("defaultMessage")
+            if code:
+                codes.append(str(code))
+        return ", ".join(codes) if codes else None
     return None
 
 
