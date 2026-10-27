@@ -3,6 +3,7 @@ from __future__ import annotations
 import requests
 
 from datetime import datetime, timedelta, timezone
+from urllib.parse import parse_qs, urlsplit
 from types import TracebackType
 from typing import Any, TypeVar
 
@@ -49,6 +50,8 @@ def _api_error(response: requests.Response) -> ComwattError:
 _C = TypeVar("_C", bound="_BaseClient")
 
 _REAUTH_MARGIN = timedelta(seconds=30)
+
+_MAX_PAGINATION_PAGES = 1000
 
 
 class _BaseClient:
@@ -107,10 +110,35 @@ class _BaseClient:
         raise _api_error(response)
 
     def _paginate(self, path: str) -> list[dict[str, Any]]:
+        """
+        Fetches every page of a paginated list endpoint.
+
+        Appends `page={n}` to `path` and concatenates the `content` of
+        each page envelope until a page comes back empty or `totalPages`
+        is reached. A path that already carries a `page` parameter is
+        rejected with `ValueError` rather than sent with two conflicting
+        values. A server that keeps returning non-empty pages without
+        `totalPages` stops the loop after `_MAX_PAGINATION_PAGES` pages
+        with a `ComwattAPIError` instead of hanging forever.
+
+        Args:
+            path (str): The endpoint path, optionally with its own query
+                parameters (but never a `page` parameter).
+
+        Returns:
+            list: The concatenated `content` of all pages.
+
+        """
+        if "page" in parse_qs(urlsplit(path).query):
+            raise ValueError("path already carries a 'page' parameter")
         separator = "&" if "?" in path else "?"
         items: list[dict[str, Any]] = []
         page = 0
         while True:
+            if page >= _MAX_PAGINATION_PAGES:
+                raise ComwattAPIError(
+                    f"pagination exceeded {_MAX_PAGINATION_PAGES} pages without terminating"
+                )
             response = self._request("GET", f"{path}{separator}page={page}").json()
             content = response.get("content", [])
             items.extend(content)
