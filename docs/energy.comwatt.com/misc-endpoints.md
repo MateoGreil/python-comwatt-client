@@ -431,7 +431,19 @@ when only a body field is supplied.
 - `GET /api/thermalcontrol?deviceId={deviceId}` — 200 with empty body on
   non-thermal devices; presumably returns set-point / mode on
   thermostats and water heaters.
-- `PUT /api/thermalcontrol/{id}` — update set-point / mode.
+- `PUT /api/thermalcontrol/{id}` — update set-point / mode (live
+  2026-10-27, enum-binding oracle on a nonexistent id). `{id}` is the
+  **thermal-control config id**, not the device id (a device id 404s);
+  obtain it from `GET /api/thermalcontrol?deviceId=` on devices that
+  have one. The inline `device` object is the **only required field**
+  and **requires** the Jackson discriminator `"@class": "Device"` plus
+  the numeric id (omitting it → 400 `Failed to read request`);
+  `setPoint` / `mode` are optional. Validation runs **before** the
+  path lookup. `GET` on the by-id path → **405**. The success path is
+  unverified (no thermal-control config exists on the probe account),
+  and `mode` values are unconfirmed at this endpoint (the
+  capacity-level thermal-mode enum is OFF/HEAT/COOL, see
+  `set_thermal_mode`).
 - `*   /api/thermalcontrol/{id}` — thermal-control configuration per
   device.
 
