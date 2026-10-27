@@ -151,3 +151,40 @@ def _authenticate_with_password(client, password):
         headers={"Set-Cookie": "cwt_session=fake-session-token; Path=/"},
     )
     client.authenticate("testuser", password)
+
+
+@responses.activate
+def test_concurrent_reauth_logs_in_once(client):
+    import json
+
+    from datetime import datetime, timedelta, timezone
+
+    client._username = "user"
+    client._auth_hash = "hash"
+    client._session_expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
+
+    login_calls = []
+
+    def login_callback(request):
+        login_calls.append(request.body)
+        return (
+            200,
+            {
+                "Set-Cookie": "cwt_session=fresh-token; Path=/",
+                "x-cwt-token": "2099-01-01T00:00:00Z",
+            },
+            json.dumps({}),
+        )
+
+    def series_callback(request):
+        return (200, {}, json.dumps({"values": [1, 2, 3]}))
+
+    responses.add_callback(responses.POST, f"{BASE_URL}/v1/authent", callback=login_callback)
+    responses.add_callback(
+        responses.GET, f"{BASE_URL}/aggregations/time-series", callback=series_callback
+    )
+
+    results = client.get_devices_ts_time_ago(["d1", "d2", "d3"], max_workers=3)
+
+    assert len(results) == 3
+    assert len(login_calls) == 1

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import requests
+import threading
 
 from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlsplit
@@ -87,6 +88,7 @@ class _BaseClient:
         self._username: str | None = None
         self._auth_hash: str | None = None
         self._session_expires_at: datetime | None = None
+        self._reauth_lock = threading.Lock()
 
     def _post_authent(self, username: str, password_hash: str) -> None:
         url = f'{self.base_url}/v1/authent'
@@ -103,10 +105,33 @@ class _BaseClient:
         self._session_expires_at = _parse_session_expiry(response.headers.get("x-cwt-token"))
 
     def _reauthenticate(self) -> None:
-        if self._username and self._auth_hash:
-            self._post_authent(self._username, self._auth_hash)
-        else:
+        """
+        Re-authenticates with the stored credentials.
+
+        Concurrent calls are serialized: at most one login runs at a
+        time, and a caller that acquires the lock while the session is
+        already fresh (another thread just re-authenticated) skips its
+        own login. Freshness is judged from `session_expires_at`; when
+        the server omits the `x-cwt-token` header, waiters cannot
+        detect the refresh and each performs a serialized login.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        Raises:
+            ComwattAuthError: If no credentials are stored.
+
+        """
+        if not (self._username and self._auth_hash):
             raise ComwattAuthError("Session expired and no stored credentials to re-authenticate")
+        with self._reauth_lock:
+            expires_at = self._session_expires_at
+            if expires_at is not None and datetime.now(timezone.utc) < expires_at - _REAUTH_MARGIN:
+                return
+            self._post_authent(self._username, self._auth_hash)
 
     def _reauthenticate_if_expired(self) -> None:
         if not (self.auto_reauth and self._username and self._auth_hash):

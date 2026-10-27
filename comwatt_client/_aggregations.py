@@ -232,7 +232,9 @@ class AggregationsMixin(_BaseClient):
         device. The client's `requests.Session` is shared across the worker
         threads: each call is a simple, independent GET, and `urllib3`'s
         connection pool is thread-safe in practice, but this is not an
-        official guarantee of `requests` itself.
+        official guarantee of `requests` itself. Concurrent re-auth is
+        serialized: at most one login runs, and the workers waiting on
+        it retry with the refreshed session.
 
         Args:
             device_ids (list): The IDs of the devices to query.
