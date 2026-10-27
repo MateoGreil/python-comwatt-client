@@ -11,7 +11,7 @@ class DevicesMixin(_BaseClient):
         Retrieves a list of devices for the specified site.
 
         Args:
-            site_id (str): The ID of the site.
+            site_id (int | str): The ID of the site.
 
         Returns:
             list: A list of devices.
@@ -28,7 +28,7 @@ class DevicesMixin(_BaseClient):
         Retrieves information about a specific device.
 
         Args:
-            device_id (str): The ID of the device.
+            device_id (int | str): The ID of the device.
 
         Returns:
             dict: A dictionary containing the device information.
@@ -50,7 +50,7 @@ class DevicesMixin(_BaseClient):
         gateway-side identifier, echoed in WebSocket streaming frames).
 
         Args:
-            device_id (str): The ID of the device.
+            device_id (int | str): The ID of the device.
 
         Returns:
             list: A list of the device's capacities.
@@ -66,7 +66,7 @@ class DevicesMixin(_BaseClient):
         Updates a specific device with the provided payload.
 
         Args:
-            device_id (str): The ID of the device.
+            device_id (int | str): The ID of the device.
             payload (dict): The payload to update the device.
 
         Returns:
@@ -92,7 +92,7 @@ class DevicesMixin(_BaseClient):
         query parameter.
 
         Args:
-            device_id (str): The ID of the device.
+            device_id (int | str): The ID of the device.
             mode (str): The control mode to apply ("ON", "OFF" or
                 "COMWATT"). Passed through to the API as-is.
 

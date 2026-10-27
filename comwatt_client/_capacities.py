@@ -11,7 +11,7 @@ class CapacitiesMixin(_BaseClient):
         Switch a specific capacity to the enable value.
 
         Args:
-            capacity_id (str): The ID of the capacity.
+            capacity_id (int | str): The ID of the capacity.
             enable (bool): The target state.
 
         Returns:
@@ -31,7 +31,7 @@ class CapacitiesMixin(_BaseClient):
         (live-verified 2026-10-27).
 
         Args:
-            capacity_id (str): The numeric id of the capacity (the `id` field,
+            capacity_id (int | str): The numeric id of the capacity (the `id` field,
                 not the opaque `capacityId` string).
             state (str): The pilot-wire order to apply. Not server-side
                 enum-bound: the 2026-10-27 binding sweep passed any string, so
@@ -56,7 +56,7 @@ class CapacitiesMixin(_BaseClient):
         (live-verified 2026-10-27).
 
         Args:
-            capacity_id (str): The numeric id of the capacity (the `id` field,
+            capacity_id (int | str): The numeric id of the capacity (the `id` field,
                 not the opaque `capacityId` string).
             state (str): The thermal mode to apply. One of `OFF`, `HEAT`, `COOL`
                 (live-pinned 2026-10-27 by an enum-binding sweep of 42
@@ -78,7 +78,7 @@ class CapacitiesMixin(_BaseClient):
         Sets the target set-point of a thermostat capacity.
 
         Args:
-            capacity_id (str): The numeric id of the capacity (the `id` field,
+            capacity_id (int | str): The numeric id of the capacity (the `id` field,
                 not the opaque `capacityId` string).
             value (float | int): The target set-point (e.g. a temperature).
                 Passed through to the API as-is; the accepted range/unit is

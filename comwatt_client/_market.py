@@ -11,7 +11,7 @@ class MarketMixin(_BaseClient):
         Retrieves the EDF Tempo calendar / tariff structure for the specified site.
 
         Args:
-            site_id (str): The ID of the site.
+            site_id (int | str): The ID of the site.
 
         Returns:
             dict: The Tempo tariff structure (`tempoSyntheses`, `daily`,

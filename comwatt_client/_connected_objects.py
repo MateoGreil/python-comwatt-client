@@ -42,7 +42,7 @@ class ConnectedObjectsMixin(_BaseClient):
         Retrieves information about a specific connected object.
 
         Args:
-            connected_object_id (str): The ID of the connected object.
+            connected_object_id (int | str): The ID of the connected object.
 
         Returns:
             dict: A dictionary containing the connected object information.

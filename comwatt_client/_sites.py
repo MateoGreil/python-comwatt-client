@@ -63,7 +63,7 @@ class SitesMixin(_BaseClient):
         device: `REAL_TIME` / `VALUATION` / `THIRD_PARTY`), not live measurement values.
 
         Args:
-            site_id (str): The ID of the site.
+            site_id (int | str): The ID of the site.
 
         Returns:
             list: A list of tile configuration objects.
@@ -79,7 +79,7 @@ class SitesMixin(_BaseClient):
         Retrieves the measure keys (measurement inventory) for the specified site.
 
         Args:
-            site_id (str): The ID of the site.
+            site_id (int | str): The ID of the site.
 
         Returns:
             list: A list of measure keys, each describing a (device, measureKind) pair

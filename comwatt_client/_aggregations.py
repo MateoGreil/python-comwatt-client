@@ -62,25 +62,12 @@ class AggregationsMixin(_BaseClient):
         Retrieves the time series data for the networks of a specific site, based on the provided parameters.
 
         Args:
-            site_id (str): The ID of the site.
-            measure_kind (str): The kind of measure (default: "FLOW"). One of
-                "FLOW", "QUANTITY", "STATE", "VALUE", "INDEX", "RATE"
-                (live-pinned 2026-10-11; e.g. "POWER" or "TEMPERATURE" are
-                rejected with 400).
-            aggregation_level (str): The aggregation level (default: "NONE"). One of
-                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
-            aggregation_type (str): The aggregation type (default: None). One of
-                "NONE", "MIN", "MAX", "SUM", "AVERAGE" (live-pinned
-                2026-10-11; "AVG" is rejected with 400).
-            time_ago_unit (str): The unit of time ago (default: "HOUR"). One of
-                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
-            time_ago_value (int): The value of time ago (default: 1).
-            start (datetime | str): The start of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                When provided, the relative `time_ago_unit`/`time_ago_value` parameters are ignored.
-            end (datetime | str): The end of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
+            site_id (int | str): The ID of the site.
+            measure_kind, aggregation_level, aggregation_type, time_ago_unit,
+                time_ago_value, start, end: Shared time-window parameters —
+                see `get_device_ts_time_ago`, the canonical holder of their
+                documentation and live-pinned enums (this alias defaults
+                `aggregation_level` to "NONE" and `time_ago_unit` to "HOUR").
 
         Returns:
             dict: The time series data. Numeric series are normalized to float/None
@@ -126,18 +113,11 @@ class AggregationsMixin(_BaseClient):
         Retrieves the consumption breakdown data for a specific site, based on the provided parameters.
 
         Args:
-            site_id (str): The ID of the site.
-            aggregation_level (str): The aggregation level (default: "HOUR"). One of
-                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
-            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
-                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
-            time_ago_value (int): The value of time ago (default: 1).
-            start (datetime | str): The start of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                When provided, the relative `time_ago_unit`/`time_ago_value` parameters are ignored.
-            end (datetime | str): The end of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
+            site_id (int | str): The ID of the site.
+            aggregation_level, time_ago_unit, time_ago_value, start, end:
+                Shared time-window parameters — see `get_device_ts_time_ago`,
+                the canonical holder of their documentation and live-pinned
+                enums.
 
         Returns:
             dict: The consumption breakdown data.
@@ -174,14 +154,19 @@ class AggregationsMixin(_BaseClient):
             aggregation_level: str = "HOUR",
             aggregation_type: str = "MAX",
             time_ago_unit: str = "DAY",
-            time_ago_value: int | str = "1",
+            time_ago_value: int | str = 1,
             start: datetime | str | None = None,
             end: datetime | str | None = None) -> dict[str, Any]:
         """
         Retrieves the time series data for a specific device, based on the provided parameters.
 
+        This method is the canonical holder of the shared time-window
+        parameter documentation (`measure_kind`, `aggregation_level`,
+        `aggregation_type`, `time_ago_unit`, `time_ago_value`, `start`,
+        `end`); the other aggregation methods reference it.
+
         Args:
-            device_id (str): The ID of the device.
+            device_id (int | str): The ID of the device.
             measure_kind (str): The kind of measure (default: "FLOW"). One of
                 "FLOW", "QUANTITY", "STATE", "VALUE", "INDEX", "RATE"
                 (live-pinned 2026-10-11; e.g. "POWER" or "TEMPERATURE" are
@@ -193,7 +178,7 @@ class AggregationsMixin(_BaseClient):
                 2026-10-11; "AVG" is rejected with 400).
             time_ago_unit (str): The unit of time ago (default: "DAY"). One of
                 "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
-            time_ago_value (str): The value of time ago (default: "1").
+            time_ago_value (int | str): The value of time ago (default: 1).
             start (datetime | str): The start of an absolute time window (default: None).
                 Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
                 When provided, the relative `time_ago_unit`/`time_ago_value` parameters are ignored.
@@ -309,24 +294,10 @@ class AggregationsMixin(_BaseClient):
                 "CHARGE", "DISCHARGE" (live-pinned 2026-10-11). "CHARGE" /
                 "DISCHARGE" select the battery flows; "BATTERY" and "GRID"
                 are rejected with 400 — use the directional values.
-            measure_kind (str): The kind of measure (default: "FLOW"). One of
-                "FLOW", "QUANTITY", "STATE", "VALUE", "INDEX", "RATE"
-                (live-pinned 2026-10-11; e.g. "POWER" or "TEMPERATURE" are
-                rejected with 400).
-            aggregation_level (str): The aggregation level (default: "HOUR"). One of
-                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
-            aggregation_type (str): The aggregation type (default: None). One of
-                "NONE", "MIN", "MAX", "SUM", "AVERAGE" (live-pinned
-                2026-10-11; "AVG" is rejected with 400).
-            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
-                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
-            time_ago_value (int): The value of time ago (default: 1).
-            start (datetime | str): The start of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                When provided, the relative `time_ago_unit`/`time_ago_value` parameters are ignored.
-            end (datetime | str): The end of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
+            measure_kind, aggregation_level, aggregation_type, time_ago_unit,
+                time_ago_value, start, end: Shared time-window parameters —
+                see `get_device_ts_time_ago`, the canonical holder of their
+                documentation and live-pinned enums.
 
         Returns:
             dict: The time series data. Numeric series are normalized to float/None
@@ -360,25 +331,11 @@ class AggregationsMixin(_BaseClient):
         Retrieves the whole-site rollup time series data for a specific site, based on the provided parameters.
 
         Args:
-            site_id (str): The ID of the site.
-            measure_kind (str): The kind of measure (default: "FLOW"). One of
-                "FLOW", "QUANTITY", "STATE", "VALUE", "INDEX", "RATE"
-                (live-pinned 2026-10-11; e.g. "POWER" or "TEMPERATURE" are
-                rejected with 400).
-            aggregation_level (str): The aggregation level (default: "HOUR"). One of
-                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
-            aggregation_type (str): The aggregation type (default: None). One of
-                "NONE", "MIN", "MAX", "SUM", "AVERAGE" (live-pinned
-                2026-10-11; "AVG" is rejected with 400).
-            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
-                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
-            time_ago_value (int): The value of time ago (default: 1).
-            start (datetime | str): The start of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                When provided, the relative `time_ago_unit`/`time_ago_value` parameters are ignored.
-            end (datetime | str): The end of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
+            site_id (int | str): The ID of the site.
+            measure_kind, aggregation_level, aggregation_type, time_ago_unit,
+                time_ago_value, start, end: Shared time-window parameters —
+                see `get_device_ts_time_ago`, the canonical holder of their
+                documentation and live-pinned enums.
 
         Returns:
             dict: The site-level time series data (productions, consumptions, injections, withdrawals,
@@ -412,18 +369,11 @@ class AggregationsMixin(_BaseClient):
         Retrieves the per-device consumption breakdown for a specific site, based on the provided parameters.
 
         Args:
-            site_id (str): The ID of the site.
-            aggregation_level (str): The aggregation level (default: "DAY"). One of
-                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
-            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
-                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
-            time_ago_value (int): The value of time ago (default: 1).
-            start (datetime | str): The start of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                When provided, the relative `time_ago_unit`/`time_ago_value` parameters are ignored.
-            end (datetime | str): The end of an absolute time window (default: None).
-                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
-                Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
+            site_id (int | str): The ID of the site.
+            aggregation_level, time_ago_unit, time_ago_value, start, end:
+                Shared time-window parameters — see `get_device_ts_time_ago`,
+                the canonical holder of their documentation and live-pinned
+                enums (this method defaults `aggregation_level` to "DAY").
 
         Returns:
             dict: The per-device consumption breakdown (top 5 devices by percentage plus an "others" bucket).
