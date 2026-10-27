@@ -229,6 +229,17 @@ for ev in client.stream_measurements(sites[0], reconnect=True):
                   f"value={ev.value_float if ev.value_float is not None else ev.value_bool}")
 ```
 
+## Architecture
+
+`ComwattClient` composes one mixin per API domain (auth, sites, devices, gateways, ...), each contributing its `get_*` / `set_*` methods flat on the client instance. The single exception is `client.weather`, a namespaced proxy.
+
+The rule deciding the split:
+
+> A domain gets a namespaced proxy if and only if its transport differs from the authenticated REST path — a different base URL/host, protocol, or auth model. Method count is never a trigger.
+
+- **Weather** is a proxy because it hits an unauthenticated OpenWeatherMap forecast proxy outside `/api`, while reusing the client's HTTP session.
+- **Streaming** is transport-divergent too (WebSocket, different host) but stays a flat method (`stream_measurements`): it is authenticated and session-coupled. It becomes a proxy only if a second streaming method ever lands.
+
 ## Related projects
 
 Actively maintained projects worth knowing about. This is deliberately not an
