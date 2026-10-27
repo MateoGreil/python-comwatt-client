@@ -24,6 +24,27 @@ class CataloguesMixin(_BaseClient):
         """
         return self._request("GET", "/products").json()
 
+    def get_product(self, product_id: int | str) -> dict[str, Any]:
+        """
+        Retrieves a single product from the hardware catalogue by its
+        numeric id.
+
+        Same shape as the `get_products()` entries (live-verified 2026-10-11):
+        `{id, name, brand, cardinality, features}`. The behavior on an
+        unknown id was not probed live.
+
+        Args:
+            product_id (int | str): The numeric ID of the product.
+
+        Returns:
+            dict: The product object.
+
+        Raises:
+            ComwattAPIError: If the API responds with an unexpected status.
+
+        """
+        return self._request("GET", f"/products/{product_id}").json()
+
     def get_timezones(self) -> list[dict[str, Any]]:
         """
         Retrieves the static list of timezones the app knows about.

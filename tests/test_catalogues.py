@@ -54,6 +54,64 @@ def test_get_products_error(client):
 
 
 @responses.activate
+def test_get_product(client):
+    product = {
+        "id": 8,
+        "name": "MONITOR_GEN_4",
+        "brand": "COMWATT",
+        "cardinality": 0,
+        "features": [
+            {"id": 5, "code": "PLANNING", "featureName": "PLANNING"},
+        ],
+    }
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/products/8",
+        json=product,
+        status=200,
+    )
+
+    result = client.get_product(8)
+
+    assert result == product
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    parsed = urlparse(request.url)
+    assert parsed.path == "/api/products/8"
+    assert parse_qs(parsed.query) == {}
+
+
+@responses.activate
+def test_get_product_accepts_str_id(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/products/8",
+        json={"id": 8, "name": "MONITOR_GEN_4", "brand": "COMWATT"},
+        status=200,
+    )
+
+    client.get_product("8")
+
+    parsed = urlparse(responses.calls[0].request.url)
+    assert parsed.path == "/api/products/8"
+
+
+@responses.activate
+def test_get_product_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/products/8",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_product(8)
+
+    assert "500" in str(exc_info.value)
+
+
+@responses.activate
 def test_get_timezones(client):
     timezones = [
         {"timeZone": "Europe/Paris", "posix": "CET-1CEST,M3.5.0,M10.5.0/3"},

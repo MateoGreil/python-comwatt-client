@@ -29,6 +29,7 @@ The client currently supports the following methods:
 - `get_electricity_price(self, site_id)`: Retrieves the EDF Tempo calendar / tariff structure for a site (`tempoSyntheses`, `daily`, ...).
 - `get_device_kinds(self, site_uid)`: Retrieves the device-kind catalogue for a site (the "add a device" picker). Takes the short `siteUid` string (from `site["siteUid"]`), not the numeric site id.
 - `get_products(self)`: Retrieves the Comwatt hardware catalogue (`MONITOR_GEN_4`, `POWER_GEN_4`, ...; `{id, name, brand, cardinality, features}`).
+- `get_product(self, product_id)`: Retrieves a single catalogue product by its numeric id — same shape as the `get_products()` entries.
 - `get_timezones(self)`: Retrieves the static timezone list (`{timeZone, posix}` pairs: IANA name + POSIX TZ string).
 - `get_modbus_configurations(self)`: Retrieves the Modbus configuration catalogue (one entry per supported Modbus device family: `{id, name, label, port, slave, device_kinds}` — note `device_kinds` is snake_case). Modbus pairing itself is an installer flow and is not exposed.
 - `get_plannings(self, site_id)`: Retrieves the plannings (schedules) for a site. Auto-paginates through the `content`/`totalPages` envelope and returns a flat list. The server currently ignores `siteId` (returns the authenticated user's plannings); the trailing-slash variant 404s, and the `?deviceId=` variant is deliberately not offered.
