@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta, timezone
 
 import pytest
 import websocket as ws_lib
@@ -499,3 +500,121 @@ def test_stream_reconnect_uses_fresh_cookie_after_reauth(monkeypatch, client):
     assert recorded_cookies[0] == "old_token"
     assert recorded_cookies[1] == "new_token"
     assert recorded_cookies[2] == "new_token"
+
+
+def _spy_reauth(client):
+    reauth_calls = [0]
+
+    def fake_reauth():
+        reauth_calls[0] += 1
+        client._session_expires_at = datetime.now(timezone.utc) + timedelta(hours=2)
+        client.session.cookies.set("cwt_session", "new_token")
+
+    client._reauthenticate = fake_reauth
+    return reauth_calls
+
+
+def test_stream_start_reauthenticates_proactively_when_expired(monkeypatch, client):
+    """Expired session + auto_reauth + stored creds -> re-auth BEFORE the WS
+    handshake, which then uses the fresh cookie (no 401 round trip)."""
+    client.session.cookies.set("cwt_session", "abc123")
+    client._username = "user@example.com"
+    client._auth_hash = "deadbeef"
+    client._session_expires_at = datetime.now(timezone.utc) - timedelta(minutes=5)
+    reauth_calls = _spy_reauth(client)
+    open_cookies = []
+
+    def open_record(cookie, timeout):
+        open_cookies.append(cookie)
+        return FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", open_record)
+
+    events = list(client.stream_measurements(SITE))
+
+    assert reauth_calls[0] == 1
+    assert open_cookies == ["new_token"]
+    assert len(events) == 1
+    assert isinstance(events[0], Measurement)
+
+
+def test_stream_start_no_proactive_reauth_when_expiry_far(monkeypatch, client):
+    client.session.cookies.set("cwt_session", "abc123")
+    client._username = "user@example.com"
+    client._auth_hash = "deadbeef"
+    client._session_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    reauth_calls = _spy_reauth(client)
+
+    monkeypatch.setattr(
+        "comwatt_client._streaming._open_websocket",
+        lambda c, t: FakeWS([CONNECTED_FRAME, MEASURES_FRAME]),
+    )
+
+    list(client.stream_measurements(SITE))
+
+    assert reauth_calls[0] == 0
+
+
+def test_stream_reconnect_reauthenticates_proactively_when_expired_mid_stream(monkeypatch, client):
+    """reconnect=True: session expires right after the first handshake -> the
+    reconnect handshake re-auths proactively and uses the fresh cookie."""
+    client.session.cookies.set("cwt_session", "abc123")
+    client._username = "user@example.com"
+    client._auth_hash = "deadbeef"
+    client._session_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    reauth_calls = _spy_reauth(client)
+    open_cookies = []
+    open_calls = [0]
+
+    def open_two_sessions(cookie, timeout):
+        open_calls[0] += 1
+        open_cookies.append(cookie)
+        if open_calls[0] == 1:
+            client._session_expires_at = datetime.now(timezone.utc) - timedelta(minutes=5)
+        return FakeWS([CONNECTED_FRAME, MEASURES_FRAME])
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", open_two_sessions)
+
+    gen = client.stream_measurements(SITE, reconnect=True)
+    events = [next(gen), next(gen)]
+    gen.close()
+
+    assert open_calls[0] == 2
+    assert reauth_calls[0] == 1
+    assert open_cookies == ["abc123", "new_token"]
+    assert len(events) == 2
+
+
+def test_stream_no_proactive_reauth_without_stored_credentials(monkeypatch, client):
+    client.session.cookies.set("cwt_session", "abc123")
+    client._session_expires_at = datetime.now(timezone.utc) - timedelta(minutes=5)
+    reauth_calls = _spy_reauth(client)
+
+    monkeypatch.setattr(
+        "comwatt_client._streaming._open_websocket",
+        lambda c, t: FakeWS([CONNECTED_FRAME, MEASURES_FRAME]),
+    )
+
+    events = list(client.stream_measurements(SITE))
+
+    assert reauth_calls[0] == 0
+    assert len(events) == 1
+
+
+def test_stream_no_proactive_reauth_when_auto_reauth_false(monkeypatch, client_no_reauth):
+    client = client_no_reauth
+    client.session.cookies.set("cwt_session", "abc123")
+    client._username = "user@example.com"
+    client._auth_hash = "deadbeef"
+    client._session_expires_at = datetime.now(timezone.utc) - timedelta(minutes=5)
+    reauth_calls = _spy_reauth(client)
+
+    monkeypatch.setattr(
+        "comwatt_client._streaming._open_websocket",
+        lambda c, t: FakeWS([CONNECTED_FRAME, MEASURES_FRAME]),
+    )
+
+    events = list(client.stream_measurements(SITE))
+
+    assert reauth_calls[0] == 0
+    assert len(events) == 1

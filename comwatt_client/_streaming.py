@@ -156,6 +156,7 @@ class StreamingMixin(_BaseClient):
             raise ComwattStreamingError(_STREAM_EXTRA_MESSAGE) from None
 
         ws_closed_exc = _websocket.WebSocketConnectionClosedException
+        self._reauthenticate_if_expired()
         cookie = self.session.cookies.get("cwt_session") or ""
 
         try:
