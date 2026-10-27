@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 import responses
 
-from comwatt_client import ComwattAPIError
+from comwatt_client import ComwattAPIError, ComwattAuthError
 
 WEATHER_URL = "https://energy.comwatt.com/weather/data/2.5/forecast/"
 
@@ -130,3 +130,18 @@ def test_forecast_rate_limit_html_error(client):
         client.weather.forecast(city="Nantes")
 
     assert "429" in str(exc_info.value)
+
+
+@responses.activate
+def test_forecast_proxy_401_raises_auth_error(client):
+    responses.add(
+        responses.GET,
+        WEATHER_URL,
+        json={"detail": "unauthorized"},
+        status=401,
+    )
+
+    with pytest.raises(ComwattAuthError) as exc_info:
+        client.weather.forecast(city="Nantes")
+
+    assert exc_info.value.status_code == 401

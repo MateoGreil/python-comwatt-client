@@ -35,8 +35,9 @@ class WeatherProxy:
             ValueError: If neither or both of `city` and `zip` are provided.
             ComwattAPIError: If the proxy or OpenWeatherMap rejects the request,
                 e.g. HTTP 404 "city not found" when `city` or `zip` does not
-                resolve to a known location. This endpoint needs no
-                authentication, so `ComwattAuthError` is never raised here.
+                resolve to a known location. The request itself needs no
+                authentication, but a 401 from the proxy surfaces as
+                `ComwattAuthError` through the client's shared error mapping.
 
         """
         if (city is None) == (zip is None):
