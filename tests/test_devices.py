@@ -154,3 +154,37 @@ def test_put_device_error(client):
 
     assert "500" in str(exc_info.value)
 
+
+@responses.activate
+def test_set_device_mode_success(client):
+    mock_response = {"id": "device-1", "configuration": {"controlMode": "MANUAL"}}
+    responses.add(
+        responses.PUT,
+        f"{BASE_URL}/devices/device-1/mode",
+        json=mock_response,
+        status=200,
+    )
+
+    result = client.set_device_mode("device-1", "ON")
+
+    assert result == mock_response
+    request = responses.calls[0].request
+    assert request.method == "PUT"
+    assert request.url == f"{BASE_URL}/devices/device-1/mode"
+    assert json.loads(request.body) == {"mode": "ON"}
+
+
+@responses.activate
+def test_set_device_mode_error(client):
+    responses.add(
+        responses.PUT,
+        f"{BASE_URL}/devices/device-1/mode",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.set_device_mode("device-1", "ON")
+
+    assert "500" in str(exc_info.value)
+

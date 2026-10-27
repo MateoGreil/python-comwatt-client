@@ -75,6 +75,35 @@ class DevicesMixin(_BaseClient):
         """
         return self._request("PUT", f"/devices/{device_id}", json=payload).json()
 
+    def set_device_mode(self, device_id: int | str, mode: str) -> dict[str, Any]:
+        """
+        Sets the control mode of a specific device — the "Off / On / Auto"
+        control.
+
+        Observed mode values are "ON", "OFF" and "COMWATT" (COMWATT is the
+        solar-driven auto mode, same family as the planning modes). They were
+        observed read-only in typical-day / planning modes: no write-based
+        enum validation was performed, and the write itself is not
+        live-verified on a consenting device.
+
+        The request shape comes from the SPA bundle and is likewise not
+        live-verified: the mode is sent as a JSON body `{"mode": mode}`.
+        If the API answers 400 live, the mode may instead be expected as a
+        query parameter.
+
+        Args:
+            device_id (str): The ID of the device.
+            mode (str): The control mode to apply ("ON", "OFF" or
+                "COMWATT"). Passed through to the API as-is.
+
+        Returns:
+            dict: A dictionary containing the response from the API.
+
+        """
+        return self._request(
+            "PUT", f"/devices/{device_id}/mode", json={"mode": mode}
+        ).json()
+
     def get_device_kinds(self, site_uid: str) -> list[dict[str, Any]]:
         """
         Retrieves the catalogue of device kinds available for a site (the
