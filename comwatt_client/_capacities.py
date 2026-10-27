@@ -24,14 +24,18 @@ class CapacitiesMixin(_BaseClient):
         """
         Sets the pilot-wire order of a heating capacity.
 
+        The capacity must be a "select" capacity: on a non-select capacity the
+        request is rejected with 412 `capacity.is.not.a.select`
+        (live-verified 2026-10-27).
+
         Args:
             capacity_id (str): The numeric id of the capacity (the `id` field,
                 not the opaque `capacityId` string).
-            state (str): The pilot-wire order to apply. Passed through to the API
-                as-is; the accepted values are defined by the backend and were
-                not confirmed against a live pilot-wire device. Inspect the
-                capacity's `selectValues` field for the values valid on your
-                hardware. Sending an unsupported value is likely to return 400.
+            state (str): The pilot-wire order to apply. Not server-side
+                enum-bound: the 2026-10-27 binding sweep passed any string, so
+                the valid orders remain unverified (no pilot-wire hardware on
+                the probe account). Inspect the capacity's `selectValues` field
+                for the orders valid on your hardware.
 
         Returns:
             dict: A dictionary containing the response from the API.
@@ -43,16 +47,21 @@ class CapacitiesMixin(_BaseClient):
 
     def set_thermal_mode(self, capacity_id: int | str, state: str) -> dict[str, Any]:
         """
-        Sets the thermal mode of a thermostat capacity (e.g. eco / comfort).
+        Sets the thermal mode of a thermostat capacity.
+
+        The capacity must be a "select" capacity: on a non-select capacity the
+        request is rejected with 412 `capacity.is.not.a.select`
+        (live-verified 2026-10-27).
 
         Args:
             capacity_id (str): The numeric id of the capacity (the `id` field,
                 not the opaque `capacityId` string).
-            state (str): The thermal mode to apply. Passed through to the API
-                as-is; the accepted values are defined by the backend and were
-                not confirmed against a live thermostat. Inspect the capacity's
-                `selectValues` field for the values valid on your hardware.
-                Sending an unsupported value is likely to return 400.
+            state (str): The thermal mode to apply. One of `OFF`, `HEAT`, `COOL`
+                (live-pinned 2026-10-27 by an enum-binding sweep of 42
+                candidates; any other value is rejected with
+                400 "Failed to convert 'state' with value: '…'"). Inspect the
+                capacity's `selectValues` field for the values valid on your
+                hardware.
 
         Returns:
             dict: A dictionary containing the response from the API.
