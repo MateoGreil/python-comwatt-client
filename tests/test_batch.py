@@ -4,7 +4,7 @@ import time
 import pytest
 import responses
 
-import comwatt_client._batch as batch_module
+import comwatt_client._aggregations as aggregations_module
 from comwatt_client import ComwattAPIError
 from tests.conftest import BASE_URL
 
@@ -106,14 +106,14 @@ def test_get_devices_ts_time_ago_empty_list_returns_empty_without_requests(clien
 @responses.activate
 def test_get_devices_ts_time_ago_default_max_workers_is_capped_at_eight(client, monkeypatch):
     captured = {}
-    real_executor = batch_module.ThreadPoolExecutor
+    real_executor = aggregations_module.ThreadPoolExecutor
 
     class RecordingExecutor(real_executor):
         def __init__(self, max_workers=None, *args, **kwargs):
             captured["max_workers"] = max_workers
             super().__init__(max_workers=max_workers, *args, **kwargs)
 
-    monkeypatch.setattr(batch_module, "ThreadPoolExecutor", RecordingExecutor)
+    monkeypatch.setattr(aggregations_module, "ThreadPoolExecutor", RecordingExecutor)
 
     device_ids = [f"device-{i}" for i in range(12)]
     for device_id in device_ids:
@@ -127,14 +127,14 @@ def test_get_devices_ts_time_ago_default_max_workers_is_capped_at_eight(client, 
 @responses.activate
 def test_get_devices_ts_time_ago_default_max_workers_matches_short_device_list(client, monkeypatch):
     captured = {}
-    real_executor = batch_module.ThreadPoolExecutor
+    real_executor = aggregations_module.ThreadPoolExecutor
 
     class RecordingExecutor(real_executor):
         def __init__(self, max_workers=None, *args, **kwargs):
             captured["max_workers"] = max_workers
             super().__init__(max_workers=max_workers, *args, **kwargs)
 
-    monkeypatch.setattr(batch_module, "ThreadPoolExecutor", RecordingExecutor)
+    monkeypatch.setattr(aggregations_module, "ThreadPoolExecutor", RecordingExecutor)
 
     device_ids = ["device-1", "device-2", "device-3"]
     for device_id in device_ids:
@@ -148,14 +148,14 @@ def test_get_devices_ts_time_ago_default_max_workers_matches_short_device_list(c
 @responses.activate
 def test_get_devices_ts_time_ago_explicit_max_workers_is_respected(client, monkeypatch):
     captured = {}
-    real_executor = batch_module.ThreadPoolExecutor
+    real_executor = aggregations_module.ThreadPoolExecutor
 
     class RecordingExecutor(real_executor):
         def __init__(self, max_workers=None, *args, **kwargs):
             captured["max_workers"] = max_workers
             super().__init__(max_workers=max_workers, *args, **kwargs)
 
-    monkeypatch.setattr(batch_module, "ThreadPoolExecutor", RecordingExecutor)
+    monkeypatch.setattr(aggregations_module, "ThreadPoolExecutor", RecordingExecutor)
 
     device_ids = [f"device-{i}" for i in range(5)]
     for device_id in device_ids:
