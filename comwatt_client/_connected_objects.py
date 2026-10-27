@@ -53,6 +53,29 @@ class ConnectedObjectsMixin(_BaseClient):
         """
         return self._request("GET", f"/connectedobjects/{connected_object_id}").json()
 
+    def get_connected_object_devices(self, connected_object_id: int | str) -> list[dict[str, Any]]:
+        """
+        Retrieves the devices exposed by a specific connected object.
+
+        Narrower than `get_devices(site_id)`: only the `/api/devices` entries
+        whose parent connected object is this one, without re-listing the
+        whole site. The endpoint returned 200 live; the exact payload shape
+        was not captured in the field notes, so entries are passed through
+        as-is.
+
+        Args:
+            connected_object_id (int | str): The numeric ID of the connected
+                object.
+
+        Returns:
+            list: A list of device objects.
+
+        Raises:
+            ComwattAPIError: If the API responds with an unexpected status.
+
+        """
+        return self._request("GET", f"/connectedobjects/{connected_object_id}/devices").json()
+
     def get_measure_keys(self, site_id: int | str) -> list[dict[str, Any]]:
         """
         Retrieves the measure keys (measurement inventory) for the specified site.

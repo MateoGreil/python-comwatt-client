@@ -108,3 +108,56 @@ def test_get_connected_object_error(client):
         client.get_connected_object("co-1")
 
     assert "500" in str(exc_info.value)
+
+
+@responses.activate
+def test_get_connected_object_devices_success(client):
+    devices = [
+        {"id": 12, "name": "solaire en autoproduction", "connectedObjectId": 8107},
+        {"id": 13, "name": "compteur réseau", "connectedObjectId": 8107},
+    ]
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/connectedobjects/8107/devices",
+        json=devices,
+        status=200,
+    )
+
+    result = client.get_connected_object_devices(8107)
+
+    assert result == devices
+    request = responses.calls[0].request
+    assert request.method == "GET"
+    parsed = urlparse(request.url)
+    assert parsed.path == "/api/connectedobjects/8107/devices"
+    assert parse_qs(parsed.query) == {}
+
+
+@responses.activate
+def test_get_connected_object_devices_accepts_str_id(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/connectedobjects/8107/devices",
+        json=[],
+        status=200,
+    )
+
+    client.get_connected_object_devices("8107")
+
+    parsed = urlparse(responses.calls[0].request.url)
+    assert parsed.path == "/api/connectedobjects/8107/devices"
+
+
+@responses.activate
+def test_get_connected_object_devices_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/connectedobjects/8107/devices",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_connected_object_devices(8107)
+
+    assert "500" in str(exc_info.value)
