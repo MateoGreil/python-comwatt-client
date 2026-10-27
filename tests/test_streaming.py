@@ -205,11 +205,16 @@ def test_stream_measurements_missing_extra_raises_streaming_error(monkeypatch, c
 # ---------------------------------------------------------------------------
 
 class FakeTime:
-    def __init__(self):
+    def __init__(self, start=0.0):
+        self.now = start
         self.sleep_args = []
 
     def sleep(self, s):
         self.sleep_args.append(s)
+        self.now += s
+
+    def monotonic(self):
+        return self.now
 
 
 class FakeRandom:
@@ -618,3 +623,117 @@ def test_stream_no_proactive_reauth_when_auto_reauth_false(monkeypatch, client_n
 
     assert reauth_calls[0] == 0
     assert len(events) == 1
+
+
+# ---------------------------------------------------------------------------
+# __ping__ keep-alive tests (issue #101)
+# ---------------------------------------------------------------------------
+
+class AdvancingTimeoutWS:
+    """recv raises the websocket timeout (like a silent socket), advancing
+    fake time by `advance` s per call; once `timeouts` is exhausted, raises
+    connection-closed to end the stream."""
+
+    def __init__(self, fake_time, advance, timeouts):
+        self.sent = []
+        self.closed = False
+        self._fake_time = fake_time
+        self._advance = advance
+        self._timeouts = timeouts
+        self._handshake_pending = True
+
+    def send(self, text):
+        self.sent.append(text)
+
+    def recv(self):
+        if self._handshake_pending:
+            self._handshake_pending = False
+            return CONNECTED_FRAME
+        self._fake_time.now += self._advance
+        if self._timeouts <= 0:
+            raise ws_lib.WebSocketConnectionClosedException()
+        self._timeouts -= 1
+        raise ws_lib.WebSocketTimeoutException()
+
+    def close(self):
+        self.closed = True
+
+
+def test_stream_pings_after_60s_of_silence(monkeypatch, client):
+    """The server declines STOMP heart-beats (CONNECTED heart-beat:0,0), so
+    the keep-alive is the raw text __ping__, every 60 s — mirroring the SPA.
+    Socket timeouts (previously an unhandled crash) now just wake the loop."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake_time = FakeTime()
+    monkeypatch.setattr("comwatt_client._streaming.time", fake_time)
+    fake = AdvancingTimeoutWS(fake_time, advance=31, timeouts=2)
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", lambda c, t: fake)
+
+    list(client.stream_measurements(SITE))
+
+    assert fake.sent.count("__ping__") == 1
+
+
+def test_stream_no_ping_before_60s(monkeypatch, client):
+    client.session.cookies.set("cwt_session", "abc123")
+    fake_time = FakeTime()
+    monkeypatch.setattr("comwatt_client._streaming.time", fake_time)
+    fake = AdvancingTimeoutWS(fake_time, advance=20, timeouts=2)
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", lambda c, t: fake)
+
+    list(client.stream_measurements(SITE))
+
+    assert "__ping__" not in fake.sent
+
+
+def test_stream_pings_during_ongoing_traffic(monkeypatch, client):
+    """Pings are time-based, independent of traffic: 60 s elapsed between two
+    frames -> __ping__ goes out before the next recv."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake_time = FakeTime()
+    monkeypatch.setattr("comwatt_client._streaming.time", fake_time)
+
+    class TrafficWithTimeJumpWS(AdvancingTimeoutWS):
+        def __init__(self):
+            super().__init__(fake_time, advance=0, timeouts=0)
+            self._calls = 0
+
+        def recv(self):
+            self._calls += 1
+            if self._calls == 1:
+                return CONNECTED_FRAME
+            if self._calls == 2:
+                self._fake_time.now += 61
+                return MEASURES_FRAME
+            raise ws_lib.WebSocketConnectionClosedException()
+
+    fake = TrafficWithTimeJumpWS()
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", lambda c, t: fake)
+
+    events = list(client.stream_measurements(SITE))
+
+    assert "__ping__" in fake.sent
+    assert len(events) == 1
+    assert isinstance(events[0], Measurement)
+
+
+def test_stream_dead_socket_at_ping_time_ends_cleanly(monkeypatch, client):
+    """If __ping__ itself fails on a dead socket, the stream ends instead of
+    leaking a raw websocket-client exception."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake_time = FakeTime()
+    monkeypatch.setattr("comwatt_client._streaming.time", fake_time)
+
+    class DeadOnPingWS(AdvancingTimeoutWS):
+        def send(self, text):
+            if text == "__ping__":
+                raise ws_lib.WebSocketConnectionClosedException()
+            self.sent.append(text)
+
+    fake = DeadOnPingWS(fake_time, advance=61, timeouts=1)
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", lambda c, t: fake)
+
+    list(client.stream_measurements(SITE))
+
+    assert fake.sent.count("__ping__") == 0
+    assert fake.closed is True

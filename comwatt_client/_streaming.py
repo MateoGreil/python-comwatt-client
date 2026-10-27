@@ -11,6 +11,8 @@ from ._core import _BaseClient
 from .exceptions import ComwattAuthError, ComwattStreamingError
 
 _WS_URL = "wss://frontage.energy.comwatt.com/ws"
+_PING_TEXT = "__ping__"
+_PING_INTERVAL = 60.0
 _STREAM_EXTRA_MESSAGE = (
     "WebSocket streaming requires the 'stream' extra: pip install comwatt-client[stream]"
 )
@@ -117,10 +119,19 @@ def _close_ws(ws: Any) -> None:
         pass
 
 
-def _consume_stream(ws: Any, ws_closed_exc: type[BaseException]) -> Iterator[Measurement | CapacityChanged]:
+def _consume_stream(ws: Any, ws_closed_exc: type[BaseException], ws_timeout_exc: type[BaseException]) -> Iterator[Measurement | CapacityChanged]:
+    last_ping = time.monotonic()
     while True:
+        if time.monotonic() - last_ping >= _PING_INTERVAL:
+            try:
+                ws.send(_PING_TEXT)
+            except ws_closed_exc:
+                break
+            last_ping = time.monotonic()
         try:
             frame = ws.recv()
+        except ws_timeout_exc:
+            continue
         except ws_closed_exc:
             break
         if not frame:
@@ -149,7 +160,7 @@ def _consume_stream(ws: Any, ws_closed_exc: type[BaseException]) -> Iterator[Mea
 class StreamingMixin(_BaseClient):
     def _connect_and_start(
         self, site_id: int, site_uid: str
-    ) -> tuple[Any, type[BaseException]]:
+    ) -> tuple[Any, type[BaseException], type[BaseException]]:
         try:
             import websocket as _websocket
         except ImportError:
@@ -231,7 +242,7 @@ class StreamingMixin(_BaseClient):
                 f"WebSocket connection failed during STOMP handshake: {exc}"
             ) from exc
 
-        return ws, ws_closed_exc
+        return ws, ws_closed_exc, _websocket.WebSocketTimeoutException
 
     def stream_measurements(
         self,
@@ -253,9 +264,9 @@ class StreamingMixin(_BaseClient):
         site_uid = site["siteUid"]
 
         if not reconnect:
-            ws, closed = self._connect_and_start(site_id, site_uid)
+            ws, closed, timeout_exc = self._connect_and_start(site_id, site_uid)
             try:
-                yield from _consume_stream(ws, closed)
+                yield from _consume_stream(ws, closed, timeout_exc)
             finally:
                 _close_ws(ws)
             return
@@ -264,7 +275,7 @@ class StreamingMixin(_BaseClient):
         delay = reconnect_backoff
         while True:
             try:
-                ws, closed = self._connect_and_start(site_id, site_uid)
+                ws, closed, timeout_exc = self._connect_and_start(site_id, site_uid)
             except ComwattAuthError:
                 raise
             except ComwattStreamingError as exc:
@@ -280,6 +291,6 @@ class StreamingMixin(_BaseClient):
             attempts = 0
             delay = reconnect_backoff
             try:
-                yield from _consume_stream(ws, closed)
+                yield from _consume_stream(ws, closed, timeout_exc)
             finally:
                 _close_ws(ws)
