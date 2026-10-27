@@ -868,3 +868,93 @@ def test_get_site_time_series_drops_non_finite_samples(client):
 
     assert result["productions"] == [None, None, 2.5]
     assert result["charges"] == [None, None, 1.0]
+
+
+@responses.activate
+def test_get_site_network_time_series_defaults(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json={"timestamps": ["2026-10-27T00:00:00Z"], "values": ["1.5", "2.5"]},
+        status=200,
+    )
+
+    result = client.get_site_network_time_series("site-1", "CONSUMPTION")
+
+    assert result == {"timestamps": ["2026-10-27T00:00:00Z"], "values": [1.5, 2.5]}
+    parsed = urlparse(responses.calls[0].request.url)
+    assert parsed.path == "/api/aggregations/time-series"
+    qs = parse_qs(parsed.query)
+    assert qs["id"] == ["site-1"]
+    assert qs["siteNetworkType"] == ["CONSUMPTION"]
+    assert qs["measureKind"] == ["FLOW"]
+    assert qs["aggregationLevel"] == ["HOUR"]
+    assert "aggregationType" not in qs
+    assert qs["timeAgoUnit"] == ["DAY"]
+    assert qs["timeAgoValue"] == ["1"]
+
+
+@responses.activate
+def test_get_site_network_time_series_battery_flow_custom_params(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json={"timestamps": [], "values": []},
+        status=200,
+    )
+
+    client.get_site_network_time_series(
+        3349, "CHARGE",
+        measure_kind="QUANTITY",
+        aggregation_level="DAY",
+        aggregation_type="SUM",
+        time_ago_unit="WEEK",
+        time_ago_value=2,
+    )
+
+    qs = parse_qs(urlparse(responses.calls[0].request.url).query)
+    assert qs["id"] == ["3349"]
+    assert qs["siteNetworkType"] == ["CHARGE"]
+    assert qs["measureKind"] == ["QUANTITY"]
+    assert qs["aggregationLevel"] == ["DAY"]
+    assert qs["aggregationType"] == ["SUM"]
+    assert qs["timeAgoUnit"] == ["WEEK"]
+    assert qs["timeAgoValue"] == ["2"]
+
+
+@responses.activate
+def test_get_site_network_time_series_absolute_window(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json={"timestamps": [], "values": []},
+        status=200,
+    )
+
+    client.get_site_network_time_series(
+        "site-1", "DISCHARGE",
+        start=datetime(2026, 10, 26, tzinfo=timezone.utc),
+        end=datetime(2026, 10, 27, tzinfo=timezone.utc),
+    )
+
+    qs = parse_qs(urlparse(responses.calls[0].request.url).query)
+    assert qs["siteNetworkType"] == ["DISCHARGE"]
+    assert qs["start"] == ["2026-10-26T00:00:00Z"]
+    assert qs["end"] == ["2026-10-27T00:00:00Z"]
+    assert "timeAgoUnit" not in qs
+    assert "timeAgoValue" not in qs
+
+
+@responses.activate
+def test_get_site_network_time_series_error(client):
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/aggregations/time-series",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.get_site_network_time_series("site-1", "PRODUCTION")
+
+    assert "500" in str(exc_info.value)

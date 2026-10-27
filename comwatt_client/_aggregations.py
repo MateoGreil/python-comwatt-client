@@ -21,12 +21,15 @@ def _format_timestamp(value: datetime | str) -> str:
 def _aggregations_query(*, id_param: str, id_value: int | str, aggregation_level: str,
         measure_kind: str | None = None, aggregation_type: str | None = None,
         time_ago_unit: str | None = None, time_ago_value: int | str | None = None,
-        start: datetime | str | None = None, end: datetime | str | None = None) -> dict[str, str]:
+        start: datetime | str | None = None, end: datetime | str | None = None,
+        site_network_type: str | None = None) -> dict[str, str]:
     if end is not None and start is None:
         raise ValueError("end requires start")
 
     params: dict[str, str] = {id_param: str(id_value), "aggregationLevel": aggregation_level}
 
+    if site_network_type is not None:
+        params["siteNetworkType"] = site_network_type
     if measure_kind is not None:
         params["measureKind"] = measure_kind
     if aggregation_type is not None:
@@ -212,6 +215,71 @@ class AggregationsMixin(_BaseClient):
             measure_kind=measure_kind, aggregation_type=aggregation_type,
             time_ago_unit=time_ago_unit, time_ago_value=time_ago_value,
             start=start, end=end,
+        )
+
+        return normalize_time_series(
+            self._request("GET", "/aggregations/time-series", params=params).json()
+        )
+
+    def get_site_network_time_series(self, site_id: int | str,
+            site_network_type: str,
+            measure_kind: str = "FLOW",
+            aggregation_level: str = "HOUR",
+            aggregation_type: str | None = None,
+            time_ago_unit: str = "DAY",
+            time_ago_value: int | str = 1,
+            start: datetime | str | None = None,
+            end: datetime | str | None = None) -> dict[str, Any]:
+        """
+        Retrieves the time series of one of a site's virtual "networks"
+        (production, consumption, grid injection/withdrawal, battery charge
+        or discharge), based on the provided parameters.
+
+        Uses the site-addressed `siteNetworkType` overload of the
+        `time-series` endpoint: the `id` query parameter carries the
+        **numeric site id**, and the chosen network replaces the whole-site
+        rollup (live-verified 2026-10-11).
+
+        Args:
+            site_id (int | str): The numeric ID of the site.
+            site_network_type (str): The virtual network to read. One of
+                "PRODUCTION", "CONSUMPTION", "INJECTION", "WITHDRAWAL",
+                "CHARGE", "DISCHARGE" (live-pinned 2026-10-11). "CHARGE" /
+                "DISCHARGE" select the battery flows; "BATTERY" and "GRID"
+                are rejected with 400 — use the directional values.
+            measure_kind (str): The kind of measure (default: "FLOW"). One of
+                "FLOW", "QUANTITY", "STATE", "VALUE", "INDEX", "RATE"
+                (live-pinned 2026-10-11; e.g. "POWER" or "TEMPERATURE" are
+                rejected with 400).
+            aggregation_level (str): The aggregation level (default: "HOUR"). One of
+                "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
+            aggregation_type (str): The aggregation type (default: None). One of
+                "NONE", "MIN", "MAX", "SUM", "AVERAGE" (live-pinned
+                2026-10-11; "AVG" is rejected with 400).
+            time_ago_unit (str): The unit of time ago (default: "DAY"). One of
+                "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
+            time_ago_value (int): The value of time ago (default: 1).
+            start (datetime | str): The start of an absolute time window (default: None).
+                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
+                When provided, the relative `time_ago_unit`/`time_ago_value` parameters are ignored.
+            end (datetime | str): The end of an absolute time window (default: None).
+                Accepts a `datetime` or an ISO-8601 string; a naive `datetime` is treated as UTC.
+                Defaults server-side to "now" when omitted. Passing `end` without `start` raises `ValueError`.
+
+        Returns:
+            dict: The time series data. Numeric series are normalized to float/None
+                samples; timestamps are left untouched.
+
+        Raises:
+            ValueError: If `end` is given without `start`.
+            ComwattAPIError: If the API responds with an unexpected status.
+
+        """
+        params = _aggregations_query(
+            id_param="id", id_value=site_id, aggregation_level=aggregation_level,
+            measure_kind=measure_kind, aggregation_type=aggregation_type,
+            time_ago_unit=time_ago_unit, time_ago_value=time_ago_value,
+            start=start, end=end, site_network_type=site_network_type,
         )
 
         return normalize_time_series(
