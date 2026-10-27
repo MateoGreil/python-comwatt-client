@@ -59,10 +59,15 @@ class AggregationsMixin(_BaseClient):
 
         Args:
             site_id (str): The ID of the site.
-            measure_kind (str): The kind of measure (default: "FLOW").
+            measure_kind (str): The kind of measure (default: "FLOW"). One of
+                "FLOW", "QUANTITY", "STATE", "VALUE", "INDEX", "RATE"
+                (live-pinned 2026-10-11; e.g. "POWER" or "TEMPERATURE" are
+                rejected with 400).
             aggregation_level (str): The aggregation level (default: "NONE"). One of
                 "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
-            aggregation_type (str): The aggregation type (default: None, can be : None, "SUM", "MAX").
+            aggregation_type (str): The aggregation type (default: None). One of
+                "NONE", "MIN", "MAX", "SUM", "AVERAGE" (live-pinned
+                2026-10-11; "AVG" is rejected with 400).
             time_ago_unit (str): The unit of time ago (default: "HOUR"). One of
                 "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
             time_ago_value (int): The value of time ago (default: 1).
@@ -173,10 +178,15 @@ class AggregationsMixin(_BaseClient):
 
         Args:
             device_id (str): The ID of the device.
-            measure_kind (str): The kind of measure (default: "FLOW").
+            measure_kind (str): The kind of measure (default: "FLOW"). One of
+                "FLOW", "QUANTITY", "STATE", "VALUE", "INDEX", "RATE"
+                (live-pinned 2026-10-11; e.g. "POWER" or "TEMPERATURE" are
+                rejected with 400).
             aggregation_level (str): The aggregation level (default: "HOUR"). One of
                 "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
-            aggregation_type (str): The aggregation type (default: "MAX").
+            aggregation_type (str): The aggregation type (default: "MAX"). One
+                of "NONE", "MIN", "MAX", "SUM", "AVERAGE" (live-pinned
+                2026-10-11; "AVG" is rejected with 400).
             time_ago_unit (str): The unit of time ago (default: "DAY"). One of
                 "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
             time_ago_value (str): The value of time ago (default: "1").
@@ -221,10 +231,15 @@ class AggregationsMixin(_BaseClient):
 
         Args:
             site_id (str): The ID of the site.
-            measure_kind (str): The kind of measure (default: "FLOW").
+            measure_kind (str): The kind of measure (default: "FLOW"). One of
+                "FLOW", "QUANTITY", "STATE", "VALUE", "INDEX", "RATE"
+                (live-pinned 2026-10-11; e.g. "POWER" or "TEMPERATURE" are
+                rejected with 400).
             aggregation_level (str): The aggregation level (default: "HOUR"). One of
                 "NONE", "HOUR", "DAY", "MONTH", "YEAR"; the API rejects "WEEK".
-            aggregation_type (str): The aggregation type (default: None, can be : None, "SUM", "MAX").
+            aggregation_type (str): The aggregation type (default: None). One of
+                "NONE", "MIN", "MAX", "SUM", "AVERAGE" (live-pinned
+                2026-10-11; "AVG" is rejected with 400).
             time_ago_unit (str): The unit of time ago (default: "DAY"). One of
                 "HOUR", "DAY", "WEEK", "MONTH", "YEAR".
             time_ago_value (int): The value of time ago (default: 1).
