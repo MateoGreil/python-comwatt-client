@@ -1,3 +1,4 @@
+import json
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -95,5 +96,94 @@ def test_get_typical_days_error(client):
 
     with pytest.raises(ComwattAPIError) as exc_info:
         client.get_typical_days(site_id="site-1")
+
+    assert "500" in str(exc_info.value)
+
+
+@responses.activate
+def test_create_typical_day_success(client):
+    mock_response = {
+        "id": 42,
+        "label": "Winter weekday",
+        "isDefault": False,
+        "timeRangeConfigurations": [],
+    }
+    payload = {
+        "label": "Winter weekday",
+        "isDefault": False,
+        "timeRangeConfigurations": [
+            {"startTime": "06:00", "endTime": "22:00", "mode": "COMWATT"}
+        ],
+    }
+    responses.add(
+        responses.POST,
+        f"{BASE_URL}/typicaldays",
+        json=mock_response,
+        status=200,
+    )
+
+    result = client.create_typical_day(site_id="site-1", payload=payload)
+
+    assert result == mock_response
+    request = responses.calls[0].request
+    assert request.method == "POST"
+    parsed = urlparse(request.url)
+    assert parsed.path == "/api/typicaldays"
+    qs = parse_qs(parsed.query)
+    assert qs["siteId"] == ["site-1"]
+    assert json.loads(request.body) == payload
+
+
+@responses.activate
+def test_create_typical_day_error(client):
+    responses.add(
+        responses.POST,
+        f"{BASE_URL}/typicaldays",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.create_typical_day(site_id="site-1", payload={"label": "x"})
+
+    assert "500" in str(exc_info.value)
+
+
+@responses.activate
+def test_update_typical_day_success(client):
+    mock_response = {
+        "id": 42,
+        "label": "Renamed",
+        "isDefault": False,
+        "timeRangeConfigurations": [],
+    }
+    payload = {"label": "Renamed"}
+    responses.add(
+        responses.PUT,
+        f"{BASE_URL}/typicaldays/42",
+        json=mock_response,
+        status=200,
+    )
+
+    result = client.update_typical_day(typical_day_id=42, payload=payload)
+
+    assert result == mock_response
+    request = responses.calls[0].request
+    assert request.method == "PUT"
+    assert request.url == f"{BASE_URL}/typicaldays/42"
+    assert json.loads(request.body) == payload
+
+
+@responses.activate
+def test_update_typical_day_error(client):
+    responses.add(
+        responses.PUT,
+        f"{BASE_URL}/typicaldays/42",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.update_typical_day(typical_day_id=42, payload={"label": "x"})
 
     assert "500" in str(exc_info.value)
