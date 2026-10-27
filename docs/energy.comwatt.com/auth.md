@@ -17,7 +17,9 @@
    see [`x-cwt-token`](#x-cwt-token--session-expiry-instant)). Otherwise, any
    endpoint returns `401` once the cookie is rejected. The cheapest probe is
    `GET /api/users/authenticated`; treat `401`/`403` as "re-login required".
-5. **Logout** — `POST /api/v1/logout` invalidates the cookie server-side.
+5. **Logout** — `POST /api/v1/logout` clears the cookie client-side only;
+   the session itself is not revocable (see
+   [Logout](#logout)).
 
 ## Login
 
@@ -80,8 +82,17 @@ The same cookie is reused for the **WebSocket** handshake at
 
 ## Logout
 
-`POST /api/v1/logout` (referenced from the bundle). Invalidates the cookie
-server-side. Body is empty.
+`POST /api/v1/logout` (referenced from the bundle). Body is empty.
+
+**Does NOT invalidate the session server-side** (live-verified 2026-10-27):
+the response only expires the cookie client-side via `Set-Cookie:
+cwt_session=; Expires=Thu, 01 Jan 1970 ...` headers, and the old cookie
+value keeps working afterwards — REST calls (`/users/authenticated`,
+`/sites`) and a fresh WebSocket handshake all answer 200 with it. The
+`cwt_session` JWE is stateless (`alg: dir`): there is no server-side
+session to revoke, and the cookie lives until its embedded expiry (the
+`x-cwt-token` instant). Treat a leaked cookie value as valid until
+expiry — only time kills it.
 
 ## Authenticated user
 

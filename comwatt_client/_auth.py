@@ -90,11 +90,16 @@ class AuthMixin(_BaseClient):
         """
         Logs the current session out on the server.
 
-        Issues ``POST /v1/logout``, which invalidates the ``cwt_session``
-        cookie server-side (the server also expires it client-side via a
-        ``Set-Cookie`` header). Stored credentials are then cleared so that
-        an expired session is not silently re-established by ``auto_reauth``
-        on the next request.
+        Issues ``POST /v1/logout``. Despite the name, this does **not**
+        invalidate the session server-side: the server only expires the
+        ``cwt_session`` cookie client-side (``Set-Cookie: cwt_session=;
+        Expires=1970`` headers — live-verified 2026-10-27: the old cookie
+        value keeps working for REST and the WebSocket handshake until its
+        natural expiry, the ``x-cwt-token`` instant; the JWE appears
+        stateless, so there is nothing to revoke server-side). The cookie
+        is dropped from the local jar and stored credentials are cleared
+        so that ``auto_reauth`` cannot silently restore the session on the
+        next request.
 
         Idempotent: if the session is already logged out (the API answers
         401), this is treated as a successful no-op.
