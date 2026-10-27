@@ -6,23 +6,6 @@ from ._core import _BaseClient
 
 
 class SitesMixin(_BaseClient):
-    def get_authenticated_user(self) -> dict[str, Any]:
-        """
-        Retrieves information about the authenticated user.
-
-        Args:
-            None
-
-        Returns:
-            dict: Information about the authenticated user.
-
-        Raises:
-            Exception: If an error occurs while retrieving the information.
-
-        """
-
-        return self._request("GET", "/users/authenticated").json()
-
     def get_sites(self) -> list[dict[str, Any]]:
         """
         Retrieves a list of sites associated with the authenticated user.
@@ -90,3 +73,20 @@ class SitesMixin(_BaseClient):
 
         """
         return self._request("GET", f"/tiles?siteId={site_id}").json()
+
+    def get_measure_keys(self, site_id: int | str) -> list[dict[str, Any]]:
+        """
+        Retrieves the measure keys (measurement inventory) for the specified site.
+
+        Args:
+            site_id (str): The ID of the site.
+
+        Returns:
+            list: A list of measure keys, each describing a (device, measureKind) pair
+                with a stable numeric id and measureKey UUID.
+
+        Raises:
+            Exception: If an error occurs while retrieving the measure keys.
+
+        """
+        return self._request("GET", f"/measurekeys/measurekeys?siteId={site_id}").json()

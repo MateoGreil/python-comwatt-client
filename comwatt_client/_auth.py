@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 
 from datetime import datetime
+from typing import Any
 
 from ._core import _BaseClient, _api_error
 
@@ -85,6 +86,23 @@ class AuthMixin(_BaseClient):
             return False
         else:
             raise _api_error(response)
+
+    def get_authenticated_user(self) -> dict[str, Any]:
+        """
+        Retrieves information about the authenticated user.
+
+        Args:
+            None
+
+        Returns:
+            dict: Information about the authenticated user.
+
+        Raises:
+            Exception: If an error occurs while retrieving the information.
+
+        """
+
+        return self._request("GET", "/users/authenticated").json()
 
     def logout(self) -> None:
         """

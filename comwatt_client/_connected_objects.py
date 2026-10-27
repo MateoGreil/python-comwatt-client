@@ -78,20 +78,3 @@ class ConnectedObjectsMixin(_BaseClient):
 
         """
         return self._request("GET", f"/connectedobjects/{connected_object_id}/devices").json()
-
-    def get_measure_keys(self, site_id: int | str) -> list[dict[str, Any]]:
-        """
-        Retrieves the measure keys (measurement inventory) for the specified site.
-
-        Args:
-            site_id (str): The ID of the site.
-
-        Returns:
-            list: A list of measure keys, each describing a (device, measureKind) pair
-                with a stable numeric id and measureKey UUID.
-
-        Raises:
-            Exception: If an error occurs while retrieving the measure keys.
-
-        """
-        return self._request("GET", f"/measurekeys/measurekeys?siteId={site_id}").json()
