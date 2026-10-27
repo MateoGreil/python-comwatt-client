@@ -8,9 +8,9 @@ from tests.conftest import BASE_URL
 
 
 @responses.activate
-def test_paginate_rejects_path_with_existing_page_param(client):
+def test_paginate_rejects_params_with_existing_page_entry(client):
     with pytest.raises(ValueError, match="page"):
-        client._paginate("/plannings?page=2")
+        client._paginate("/plannings", params={"page": 2})
 
 
 @responses.activate
@@ -18,7 +18,7 @@ def test_paginate_accepts_page_like_param_names(client):
     responses.add(responses.GET, f"{BASE_URL}/plannings", json={"content": [{"a": 1}]})
     responses.add(responses.GET, f"{BASE_URL}/plannings", json={"content": []})
 
-    assert client._paginate("/plannings?somepage=1") == [{"a": 1}]
+    assert client._paginate("/plannings", params={"somepage": 1}) == [{"a": 1}]
 
 
 @responses.activate

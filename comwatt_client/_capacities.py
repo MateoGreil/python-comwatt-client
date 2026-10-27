@@ -19,9 +19,8 @@ class CapacitiesMixin(_BaseClient):
 
         """
         return self._json_or_empty(self._request(
-            "PUT", f"/capacities/{capacity_id}/switch?enable={str(enable).lower()}"
+            "PUT", f"/capacities/{capacity_id}/switch", params={"enable": str(enable).lower()}
         ))
-
     def set_pilot_wire(self, capacity_id: int | str, state: str) -> dict[str, Any]:
         """
         Sets the pilot-wire order of a heating capacity.
@@ -118,7 +117,7 @@ class CapacitiesMixin(_BaseClient):
 
         """
         response = self._request(
-            "GET", f"/thermalcontrol?deviceId={device_id}"
+            "GET", "/thermalcontrol", params={"deviceId": device_id}
         )
         if not response.text.strip():
             return None

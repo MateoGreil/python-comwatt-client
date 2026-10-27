@@ -72,7 +72,7 @@ class SitesMixin(_BaseClient):
             Exception: If an error occurs while retrieving the tiles.
 
         """
-        return self._request("GET", f"/tiles?siteId={site_id}").json()
+        return self._request("GET", "/tiles", params={"siteId": site_id}).json()
 
     def get_measure_keys(self, site_id: int | str) -> list[dict[str, Any]]:
         """
@@ -89,4 +89,4 @@ class SitesMixin(_BaseClient):
             Exception: If an error occurs while retrieving the measure keys.
 
         """
-        return self._request("GET", f"/measurekeys/measurekeys?siteId={site_id}").json()
+        return self._request("GET", "/measurekeys/measurekeys", params={"siteId": site_id}).json()

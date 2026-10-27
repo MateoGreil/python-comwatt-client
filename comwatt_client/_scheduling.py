@@ -28,7 +28,7 @@ class SchedulingMixin(_BaseClient):
 
         """
 
-        return self._paginate(f"/plannings?siteId={site_id}")
+        return self._paginate("/plannings", params={"siteId": site_id})
 
     def update_planning(self, planning_id: int | str, payload: dict[str, Any]) -> dict[str, Any]:
         """
@@ -85,7 +85,7 @@ class SchedulingMixin(_BaseClient):
 
         """
 
-        return self._paginate(f"/typicaldays?siteId={site_id}")
+        return self._paginate("/typicaldays", params={"siteId": site_id})
 
     def create_typical_day(self, site_id: int | str, payload: dict[str, Any]) -> dict[str, Any]:
         """
@@ -111,7 +111,7 @@ class SchedulingMixin(_BaseClient):
                 day.
 
         """
-        return self._json_or_empty(self._request("POST", f"/typicaldays?siteId={site_id}", json=payload))
+        return self._json_or_empty(self._request("POST", "/typicaldays", params={"siteId": site_id}, json=payload))
 
     def update_typical_day(self, typical_day_id: int | str, payload: dict[str, Any]) -> dict[str, Any]:
         """

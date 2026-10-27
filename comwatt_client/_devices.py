@@ -21,7 +21,7 @@ class DevicesMixin(_BaseClient):
 
         """
 
-        return self._request("GET", f"/devices?siteId={site_id}").json()
+        return self._request("GET", "/devices", params={"siteId": site_id}).json()
 
     def get_device(self, device_id: int | str) -> dict[str, Any]:
         """

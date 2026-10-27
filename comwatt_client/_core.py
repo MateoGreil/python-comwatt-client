@@ -4,7 +4,6 @@ import requests
 import threading
 
 from datetime import datetime, timedelta, timezone
-from urllib.parse import parse_qs, urlsplit
 from types import TracebackType
 from typing import Any, TypeVar
 
@@ -161,7 +160,7 @@ class _BaseClient:
         Parses a response body as JSON, mapping an empty body to ``{}``.
 
         Write endpoints may answer 201/204; a 204 carries no body, so
-        callers that would otherwise run ``response.json()`` on it use
+        callers that would otherwise run ``response.json()" on it use
         this helper to get an empty dict instead of a decode error.
 
         Args:
@@ -175,29 +174,31 @@ class _BaseClient:
             return {}
         return response.json()
 
-    def _paginate(self, path: str) -> list[dict[str, Any]]:
+    def _paginate(self, path: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         """
         Fetches every page of a paginated list endpoint.
 
-        Appends `page={n}` to `path` and concatenates the `content` of
-        each page envelope until a page comes back empty or `totalPages`
-        is reached. A path that already carries a `page` parameter is
-        rejected with `ValueError` rather than sent with two conflicting
-        values. A server that keeps returning non-empty pages without
-        `totalPages` stops the loop after `_MAX_PAGINATION_PAGES` pages
-        with a `ComwattAPIError` instead of hanging forever.
+        Sends `params` plus the `page` counter with each GET and
+        concatenates the `content` of each page envelope until a page
+        comes back empty or `totalPages` is reached. Passing a `page`
+        entry in `params` is rejected with `ValueError` rather than sent
+        with two conflicting values. A server that keeps returning
+        non-empty pages without `totalPages` stops the loop after
+        `_MAX_PAGINATION_PAGES` pages with a `ComwattAPIError` instead
+        of hanging forever.
 
         Args:
-            path (str): The endpoint path, optionally with its own query
-                parameters (but never a `page` parameter).
+            path (str): The endpoint path, without query string.
+            params (dict | None): Query parameters to send on every page
+                request (default: None).
 
         Returns:
             list: The concatenated `content` of all pages.
 
         """
-        if "page" in parse_qs(urlsplit(path).query):
-            raise ValueError("path already carries a 'page' parameter")
-        separator = "&" if "?" in path else "?"
+        query: dict[str, Any] = dict(params) if params else {}
+        if "page" in query:
+            raise ValueError("params already carry a 'page' parameter")
         items: list[dict[str, Any]] = []
         page = 0
         while True:
@@ -205,7 +206,8 @@ class _BaseClient:
                 raise ComwattAPIError(
                     f"pagination exceeded {_MAX_PAGINATION_PAGES} pages without terminating"
                 )
-            response = self._request("GET", f"{path}{separator}page={page}").json()
+            query["page"] = page
+            response = self._request("GET", path, params=query).json()
             content = response.get("content", [])
             items.extend(content)
             total_pages = response.get("totalPages")

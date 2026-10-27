@@ -21,7 +21,7 @@ class MarketMixin(_BaseClient):
             Exception: If an error occurs while retrieving the electricity price.
 
         """
-        return self._request("GET", f"/electricityprice?siteId={site_id}").json()
+        return self._request("GET", "/electricityprice", params={"siteId": site_id}).json()
 
     def get_ecowatt(self) -> list[dict[str, Any]]:
         """

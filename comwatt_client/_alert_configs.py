@@ -33,7 +33,7 @@ class AlertConfigsMixin(_BaseClient):
 
         """
         return self._request(
-            "GET", f"/alertconfigs/v2?deviceId={device_id}"
+            "GET", "/alertconfigs/v2", params={"deviceId": device_id}
         ).json()
 
     def set_alert_config(

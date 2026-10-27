@@ -31,11 +31,8 @@ class ConnectedObjectsMixin(_BaseClient):
             )
 
         if site_id is not None:
-            path = f"/connectedobjects?siteId={site_id}"
-        else:
-            path = f"/connectedobjects?gatewayUid={gateway_uid}"
-
-        return self._request("GET", path).json()
+            return self._request("GET", "/connectedobjects", params={"siteId": site_id}).json()
+        return self._request("GET", "/connectedobjects", params={"gatewayUid": gateway_uid}).json()
 
     def get_connected_object(self, connected_object_id: int | str) -> dict[str, Any]:
         """
