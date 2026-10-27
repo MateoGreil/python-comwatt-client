@@ -1,3 +1,4 @@
+import json
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -89,5 +90,50 @@ def test_get_plannings_error(client):
 
     with pytest.raises(ComwattAPIError) as exc_info:
         client.get_plannings(site_id="site-1")
+
+    assert "500" in str(exc_info.value)
+
+
+@responses.activate
+def test_update_planning_success(client):
+    mock_response = {"id": 42, "name": "Winter planning"}
+    payload = {
+        "id": 42,
+        "device": {"@class": "Device", "id": 7},
+        "typicalDaySchedules": [
+            {
+                "typicalDay": {"id": 3, "startTime": "00:00:00", "endTime": "06:00:00"},
+                "startTime": "07:00:00",
+                "endTime": "09:00:00",
+            }
+        ],
+    }
+    responses.add(
+        responses.PUT,
+        f"{BASE_URL}/plannings/42",
+        json=mock_response,
+        status=200,
+    )
+
+    result = client.update_planning(planning_id=42, payload=payload)
+
+    assert result == mock_response
+    request = responses.calls[0].request
+    assert request.method == "PUT"
+    assert request.url == f"{BASE_URL}/plannings/42"
+    assert json.loads(request.body) == payload
+
+
+@responses.activate
+def test_update_planning_error(client):
+    responses.add(
+        responses.PUT,
+        f"{BASE_URL}/plannings/42",
+        json={},
+        status=500,
+    )
+
+    with pytest.raises(ComwattAPIError) as exc_info:
+        client.update_planning(planning_id=42, payload={"id": 42})
 
     assert "500" in str(exc_info.value)

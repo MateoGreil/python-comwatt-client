@@ -29,3 +29,35 @@ class PlanningsMixin(_BaseClient):
         """
 
         return self._paginate(f"/plannings?siteId={site_id}")
+
+    def update_planning(self, planning_id: int | str, payload: dict[str, Any]) -> dict[str, Any]:
+        """
+        Updates a specific planning with the provided payload.
+
+        Sends `payload` as-is as the request body to
+        `PUT /plannings/{planning_id}`. Three pitfalls are known
+        second-hand (from solareco's PlanningDto, not live-tested):
+
+        1. An inline `device` object carrying the fastjson discriminator
+           `"@class": "Device"` plus a numeric `id` is required — without
+           the discriminator the API returns `400 "Failed to read request"`.
+        2. Each schedule's `typicalDay` must be a full inline object; an
+           id-only reference returns 500.
+        3. The PUT replaces `typicalDaySchedules` wholesale — any user
+           schedule omitted from the payload is deleted. Include every
+           surviving schedule and re-read (e.g. via `get_plannings`)
+           after writing. Schedules with `optimalPlanning: true` are
+           server-managed and not writable.
+
+        Args:
+            planning_id (int | str): The ID of the planning.
+            payload (dict): The payload to update the planning.
+
+        Returns:
+            dict: A dictionary containing the response from the API.
+
+        Raises:
+            Exception: If an error occurs while updating the planning.
+
+        """
+        return self._request("PUT", f"/plannings/{planning_id}", json=payload).json()
