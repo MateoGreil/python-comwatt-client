@@ -108,6 +108,14 @@ class CapacityChanged:
     raw: dict[str, Any]
 
 
+def _close_stream(ws: Any) -> None:
+    try:
+        ws.send(_encode_frame("SEND", {"destination": "/app/streaming/stop"}))
+    except Exception:
+        pass
+    _close_ws(ws)
+
+
 def _close_ws(ws: Any) -> None:
     try:
         ws.send(_encode_frame("DISCONNECT", {}))
@@ -268,7 +276,7 @@ class StreamingMixin(_BaseClient):
             try:
                 yield from _consume_stream(ws, closed, timeout_exc)
             finally:
-                _close_ws(ws)
+                _close_stream(ws)
             return
 
         attempts = 0
@@ -293,4 +301,4 @@ class StreamingMixin(_BaseClient):
             try:
                 yield from _consume_stream(ws, closed, timeout_exc)
             finally:
-                _close_ws(ws)
+                _close_stream(ws)

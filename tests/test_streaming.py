@@ -737,3 +737,87 @@ def test_stream_dead_socket_at_ping_time_ends_cleanly(monkeypatch, client):
 
     assert fake.sent.count("__ping__") == 0
     assert fake.closed is True
+
+
+# ---------------------------------------------------------------------------
+# /app/streaming/stop teardown tests (issue #101)
+# ---------------------------------------------------------------------------
+
+def _sent_stop_frames(fake):
+    return [f for f in fake.sent if f.startswith("SEND\ndestination:/app/streaming/stop")]
+
+
+def test_stream_teardown_sends_stop_before_disconnect(monkeypatch, client):
+    client.session.cookies.set("cwt_session", "abc123")
+    fake = _patch_with_fake(monkeypatch, [CONNECTED_FRAME, MEASURES_FRAME, MEASURES_FRAME])
+
+    gen = client.stream_measurements(SITE)
+    next(gen)
+    gen.close()
+
+    stop_frames = _sent_stop_frames(fake)
+    assert len(stop_frames) == 1
+    assert stop_frames[0] == "SEND\ndestination:/app/streaming/stop\n\n\x00"
+    disconnect_index = next(i for i, f in enumerate(fake.sent) if f.startswith("DISCONNECT"))
+    stop_index = fake.sent.index(stop_frames[0])
+    assert stop_index < disconnect_index
+    assert fake.closed is True
+
+
+def test_stream_stop_sent_after_natural_end(monkeypatch, client):
+    client.session.cookies.set("cwt_session", "abc123")
+    fake = _patch_with_fake(monkeypatch, [CONNECTED_FRAME, MEASURES_FRAME])
+
+    events = list(client.stream_measurements(SITE))
+
+    assert len(events) == 1
+    assert len(_sent_stop_frames(fake)) == 1
+
+
+def test_stream_stop_best_effort_on_dead_socket(monkeypatch, client):
+    """Socket already dead at teardown -> the stop SEND fails silently; the
+    DISCONNECT attempt and close() still run, nothing propagates."""
+    client.session.cookies.set("cwt_session", "abc123")
+
+    class DeadOnTeardownWS(FakeWS):
+        def send(self, text):
+            if text.startswith("SEND\ndestination:/app/streaming/stop") or text.startswith("DISCONNECT"):
+                raise ws_lib.WebSocketConnectionClosedException()
+            self.sent.append(text)
+
+    fake = DeadOnTeardownWS([CONNECTED_FRAME, MEASURES_FRAME])
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", lambda c, t: fake)
+
+    events = list(client.stream_measurements(SITE))
+
+    assert len(events) == 1
+    assert fake.closed is True
+
+
+def test_stream_no_stop_frame_when_handshake_failed(monkeypatch, client):
+    """The stream never started, so teardown must not SEND stop — plain
+    DISCONNECT teardown only."""
+    client.session.cookies.set("cwt_session", "abc123")
+    fake = _patch_with_fake(monkeypatch, ["ERROR\nmessage:boom\n\n\x00"])
+
+    with pytest.raises(ComwattStreamingError):
+        list(client.stream_measurements(SITE))
+
+    assert _sent_stop_frames(fake) == []
+    assert any(f.startswith("DISCONNECT") for f in fake.sent)
+
+
+def test_stream_reconnect_teardown_sends_stop(monkeypatch, client):
+    client.session.cookies.set("cwt_session", "abc123")
+    monkeypatch.setattr("comwatt_client._streaming.time", FakeTime())
+    monkeypatch.setattr("comwatt_client._streaming.random", FakeRandom())
+    fake = FakeWS([CONNECTED_FRAME, MEASURES_FRAME, MEASURES_FRAME])
+
+    monkeypatch.setattr("comwatt_client._streaming._open_websocket", lambda c, t: fake)
+
+    gen = client.stream_measurements(SITE, reconnect=True)
+    next(gen)
+    gen.close()
+
+    assert len(_sent_stop_frames(fake)) == 1
+    assert any(f.startswith("DISCONNECT") for f in fake.sent)
