@@ -274,23 +274,27 @@ the integration's 2-minute REST poll.
 
 The `cwt_session` cookie dies at the `x-cwt-token` instant (login +
 exactly 2 h, re-confirmed to the second on 2026-10-27: login
-10:24:44 UTC → expiry 12:24:44 UTC). Live probe findings, 2026-10-27:
+13:46:20 UTC → expiry 15:46:21 UTC). The server authenticates the
+stream **once, at the handshake** — it never re-checks the cookie
+mid-stream. A full 2 h live observation (2026-10-27, sleep-inhibited
+host, wall/monotonic clocks matching to ~1 s across the run):
 
-- **Expired cookie at the handshake → HTTP 401.** A fresh WS handshake
-  (post-expiry, ~73 min after) with the old cookie value is rejected
-  with HTTP 401, exactly like REST calls (`/users/authenticated`,
-  `/sites` → 401). Expiry is enforced at every point where the cookie
-  is presented: REST requests and WS handshakes.
-- **Established stream through the expiry instant: unobserved.** The
-  stream was healthy and receiving frames up to ~5.5 min before expiry
-  (2236 frames over ~1 h 50 m, steady ~98–99 frames / 300 s), but the
-  observation host suspended across the boundary. Whether the server
-  cuts an established socket at expiry — or only rejects new
-  handshakes — is still open; a rerun with sleep inhibited is pending.
-- For the client this validates the layered re-auth design
-  (`stream_measurements`): proactive refresh before each handshake
-  (the only moment the cookie is checked), reactive 401-at-handshake
-  re-auth as the fallback.
+- **The established stream SURVIVES the expiry.** Frames kept flowing
+  across the boundary at the same steady cadence (~100–118 frames /
+  300 s): 2631 frames at expiry−4 min, 2749 at expiry+1 min — +118
+  frames accrued through the instant, no cut, no stall, no burst, over
+  the full 2 h 01 m run (2761 frames total).
+- **Expired cookie at any new presentation → 401.** Post-expiry, the
+  old cookie value is rejected everywhere it is presented: REST
+  (`/users/authenticated`, `/sites` → 401) and a fresh WS handshake
+  (HTTP 401).
+
+Consequence: expiry cannot kill a running stream — only a
+re-handshake (reconnect) needs a fresh cookie. For the client this
+validates the layered re-auth design of `stream_measurements`:
+proactive refresh before each handshake (the only moment the cookie
+is checked) with the reactive 401-at-handshake re-auth as fallback;
+no mid-stream keep-alive of the session is needed.
 
 ## What is NOT pushed
 
