@@ -1,5 +1,5 @@
 pytest==9.2.0
 responses==0.26.3
 mypy==2.4.1
-types-requests==2.33.0.20261006
+types-requests==2.33.0.20261030
 websocket-client==1.9.2
